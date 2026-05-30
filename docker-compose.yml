@@ -1,0 +1,121 @@
+name: hitravel
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: hitravel-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: admin_hitravel_2026
+    ports:
+      - "5433:5432"
+    volumes:
+      - hitravel-postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d admin_hitravel_2026"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  openwa-api:
+    image: hitravel/openwa:latest
+    build:
+      context: ./docker/openwa
+      dockerfile: Dockerfile
+    container_name: hitravel-openwa
+    restart: unless-stopped
+    ports:
+      - "2785:2785"
+    environment:
+      NODE_ENV: production
+      PORT: 2785
+      LOG_LEVEL: info
+      DATABASE_TYPE: sqlite
+      DATABASE_NAME: /app/data/openwa.sqlite
+      ENGINE_TYPE: whatsapp-web.js
+      SESSION_DATA_PATH: /app/data/sessions
+      PUPPETEER_HEADLESS: "true"
+      PUPPETEER_ARGS: "--no-sandbox,--disable-setuid-sandbox,--disable-dev-shm-usage,--disable-gpu"
+      PUPPETEER_EXECUTABLE_PATH: /usr/bin/chromium
+      STORAGE_TYPE: local
+      STORAGE_LOCAL_PATH: /app/data/media
+      PLUGINS_ENABLED: "true"
+      PLUGINS_DIR: /app/data/plugins
+      API_MASTER_KEY: ${OPENWA_API_KEY}
+      RATE_LIMIT_TTL: 60
+      RATE_LIMIT_MAX: 200
+    volumes:
+      - openwa-data:/app/data
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "require('http').get('http://localhost:2785/api/health', (r) => process.exit(r.statusCode === 200 ? 0 : 1))",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  hitravel-migrate:
+    image: hitravel/migrate:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: migrator
+    container_name: hitravel-migrate
+    env_file:
+      - .env.docker
+    environment:
+      DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD}@postgres:5432/admin_hitravel_2026
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no"
+
+  hitravel-web:
+    image: hitravel/web:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runner
+    container_name: hitravel-web
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env.docker
+    environment:
+      DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD}@postgres:5432/admin_hitravel_2026
+      OPENWA_BASE_URL: http://openwa-api:2785/api
+      OPENWA_WEBHOOK_URL: http://hitravel-web:3000/api/whatsapp/webhook
+      SITE_URL: http://hitravel-web:3000
+      OPENWA_AUTO_START: "true"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      openwa-api:
+        condition: service_healthy
+      hitravel-migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000', (r) => process.exit(r.statusCode < 500 ? 0 : 1))"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+    volumes:
+      # Misma carpeta que en `npm run dev` para ver subidas al instante
+      - ./public/uploads:/app/public/uploads
+
+volumes:
+  hitravel-postgres:
+  openwa-data:
+
+networks:
+  default:
+    name: hitravel-network

@@ -1,10 +1,11 @@
 type BookingStatusBadgeProps = {
-  status: "paid" | "pending" | "refunded" | "confirmed" | "cancelled";
+  status: "paid" | "pending" | "partial" | "refunded" | "confirmed" | "cancelled";
 };
 
 const badgeMap = {
   paid: "bg-green-50 text-green-700",
   pending: "bg-yellow-50 text-yellow-700",
+  partial: "bg-orange-50 text-orange-800",
   refunded: "bg-red-50 text-red-700",
   confirmed: "bg-blue-50 text-blue-700",
   cancelled: "bg-red-50 text-red-700",
@@ -13,6 +14,7 @@ const badgeMap = {
 const labelMap = {
   paid: "Pagado",
   pending: "Pendiente",
+  partial: "Abono parcial",
   refunded: "Reembolsado",
   confirmed: "Confirmado",
   cancelled: "Cancelado",

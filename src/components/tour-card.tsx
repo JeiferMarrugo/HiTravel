@@ -1,12 +1,16 @@
 import Image from "next/image";
 import Link from "next/link";
-import type { Tour } from "@/lib/site-data";
+import { formatVisitorPrice } from "@/lib/pricing/visitor-currency";
+import type { DisplayCurrency } from "@/lib/pricing/visitor-currency";
+import { isUploadedImage, type PublicTour } from "@/lib/catalog/public";
 
 type TourCardProps = {
-  tour: Tour;
+  tour: PublicTour;
+  displayCurrency: DisplayCurrency;
+  usdCopRate: number;
 };
 
-export function TourCard({ tour }: TourCardProps) {
+export function TourCard({ tour, displayCurrency, usdCopRate }: TourCardProps) {
   return (
     <article className="group overflow-hidden rounded-xl bg-surface-container-lowest coastal-mist-shadow transition-transform duration-300 hover:-translate-y-1">
       <div className="relative h-64 overflow-hidden">
@@ -16,9 +20,10 @@ export function TourCard({ tour }: TourCardProps) {
           fill
           className="object-cover transition-transform duration-500 group-hover:scale-110"
           sizes="(max-width: 1024px) 100vw, 33vw"
+          unoptimized={isUploadedImage(tour.heroImage)}
         />
         <div className="absolute right-4 top-4 rounded-full bg-secondary-container px-3 py-1 text-sm font-semibold text-on-secondary-container shadow-sm">
-          ${tour.price} USD
+          {formatVisitorPrice(tour.priceFromCents, tour.currency, displayCurrency, usdCopRate)}
         </div>
         {tour.badge ? (
           <div className="absolute bottom-4 left-4">

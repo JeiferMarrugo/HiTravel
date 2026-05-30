@@ -1,7 +1,9 @@
 import Link from "next/link";
-import { contactDetails, navigationLinks } from "@/lib/site-data";
+import { defaultSiteContent } from "@/lib/site-content/defaults";
+import { navigationLinks } from "@/lib/site-data";
 
 export function SiteFooter() {
+  const { contact, brand, footer } = defaultSiteContent;
   return (
     <footer className="border-t border-white/10 bg-primary text-on-primary">
       <div className="mx-auto grid max-w-shell gap-10 px-4 py-16 md:grid-cols-[1.3fr_1fr_1fr] md:px-16">
@@ -11,13 +13,10 @@ export function SiteFooter() {
               HI
             </div>
             <div>
-              <p className="text-2xl font-extrabold tracking-tight text-secondary-container">HI TRAVEL</p>
-              <p className="text-sm text-white/70">Tu próxima aventura comienza aquí</p>
+              <p className="text-2xl font-extrabold tracking-tight text-secondary-container">{brand.name}</p>
+              <p className="text-sm text-white/70">{footer.toursDescription}</p>
             </div>
           </div>
-          <p className="max-w-sm text-sm leading-6 text-white/80">
-            Diseñamos tours y pasadías en el Caribe colombiano con una experiencia clara, confiable y visualmente cuidada.
-          </p>
         </div>
 
         <div>
@@ -33,12 +32,16 @@ export function SiteFooter() {
 
         <div className="space-y-3">
           <p className="text-sm font-semibold uppercase tracking-[0.2em] text-secondary-container">Contacto</p>
-          <p className="text-sm text-white/80">{contactDetails.address}</p>
-          <a className="block text-sm text-white/80 transition hover:text-white" href={`tel:${contactDetails.phone}`}>
-            {contactDetails.phone}
+          <p className="text-sm text-white/80">
+            {contact.address}
+            <br />
+            {contact.addressLine2}
+          </p>
+          <a className="block text-sm text-white/80 transition hover:text-white" href={`tel:${contact.phone}`}>
+            {contact.phone}
           </a>
-          <a className="block text-sm text-white/80 transition hover:text-white" href={`mailto:${contactDetails.email}`}>
-            {contactDetails.email}
+          <a className="block text-sm text-white/80 transition hover:text-white" href={`mailto:${contact.email}`}>
+            {contact.email}
           </a>
         </div>
       </div>

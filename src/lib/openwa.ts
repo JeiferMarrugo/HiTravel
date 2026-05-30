@@ -218,9 +218,53 @@ function parseOpenWaResponse(rawText: string) {
   }
 }
 
+function translateOpenWaMessage(message: string) {
+  if (message.includes("Session is not started")) {
+    return "La sesión no está iniciada. Pulsa Iniciar antes de ver el QR.";
+  }
+
+  if (message.includes("QR code is not ready yet")) {
+    return "El código QR aún no está listo. Espera unos segundos e inténtalo de nuevo.";
+  }
+
+  if (message.includes("already authenticated")) {
+    return "La sesión ya está autenticada. No necesitas escanear un QR.";
+  }
+
+  if (message.includes("Invalid API key")) {
+    return "La API key de OpenWA no es válida. Revisa OPENWA_API_KEY en .env.docker.";
+  }
+
+  if (message.includes("Session is already started")) {
+    return "La sesión ya está iniciada.";
+  }
+
+  if (message.includes("Failed to launch the browser") || message.includes("profile appears to be in use")) {
+    return "Chromium quedó bloqueado por una sesión anterior. Reinicia OpenWA o ejecuta npm run docker:openwa:clean-locks.";
+  }
+
+  if (message === "Internal server error") {
+    return "OpenWA no pudo iniciar WhatsApp. Revisa los logs de hitravel-openwa y vuelve a intentar.";
+  }
+
+  return message;
+}
+
 function formatOpenWaError(status: number, payload: unknown) {
+  if (payload && typeof payload === "object" && payload !== null) {
+    const record = payload as Record<string, unknown>;
+
+    if (typeof record.message === "string" && record.message.trim()) {
+      return translateOpenWaMessage(record.message.trim());
+    }
+
+    if (typeof record.error === "string" && record.error.trim()) {
+      return translateOpenWaMessage(record.error.trim());
+    }
+  }
+
   if (typeof payload === "string" && payload) {
-    return `OpenWA respondió ${status}: ${payload}`;
+    return translateOpenWaMessage(payload);
   }
 
   if (payload && typeof payload === "object") {

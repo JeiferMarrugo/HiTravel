@@ -2,6 +2,8 @@
 
 import { useMemo, useState } from "react";
 import type { OpenWaQrCode, OpenWaSession } from "@/lib/admin/types";
+import { notify } from "@/lib/toast";
+import { syncActiveSessionToServer } from "@/lib/whatsapp/sync-active-session-client";
 
 type SessionsPanelProps = {
   isLoading: boolean;
@@ -14,6 +16,20 @@ type SessionsPanelProps = {
   selectedSessionId?: string | null;
   sessions: OpenWaSession[];
 };
+
+function sleep(ms: number) {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
+}
+
+function needsSessionStart(status: OpenWaSession["status"]) {
+  return status === "created" || status === "disconnected" || status === "failed";
+}
+
+function isQrPendingError(message: string) {
+  return message.includes("no está listo") || message.includes("not ready") || message.includes("no está iniciada") || message.includes("not started");
+}
 
 function statusTone(status: OpenWaSession["status"]) {
   switch (status) {
@@ -42,7 +58,6 @@ export function SessionsPanel({
   sessions,
 }: SessionsPanelProps) {
   const [sessionName, setSessionName] = useState("");
-  const [feedback, setFeedback] = useState<string | null>(null);
   const [qrCode, setQrCode] = useState<OpenWaQrCode | null>(null);
   const [busySessionId, setBusySessionId] = useState<string | null>(null);
 
@@ -55,29 +70,90 @@ export function SessionsPanel({
     event.preventDefault();
 
     if (!sessionName.trim()) {
+      notify.warning("Escribe un nombre para la nueva sesión.");
       return;
     }
-
-    setFeedback(null);
 
     try {
       await onCreateSession(sessionName.trim());
       setSessionName("");
-      setFeedback("Sesión creada correctamente.");
+      notify.success("Sesión creada correctamente.");
     } catch (error) {
-      setFeedback(error instanceof Error ? error.message : "No fue posible crear la sesión.");
+      notify.error(error instanceof Error ? error.message : "No fue posible crear la sesión.");
+    }
+  }
+
+  async function loadQrWithRetry(sessionId: string) {
+    const maxAttempts = 12;
+
+    for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
+      try {
+        const nextQrCode = await onLoadQrCode(sessionId);
+
+        if (nextQrCode?.qrCode) {
+          return nextQrCode;
+        }
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "";
+
+        if (!isQrPendingError(message) || attempt === maxAttempts - 1) {
+          throw error;
+        }
+      }
+
+      await sleep(2500);
+    }
+
+    throw new Error("El código QR no estuvo listo a tiempo. Intenta de nuevo.");
+  }
+
+function isStartIgnorableError(message: string) {
+  return message.includes("ya está iniciada") || message.includes("already started");
+}
+
+  async function ensureSessionRunning(sessionId: string, status?: OpenWaSession["status"]) {
+    if (status === "failed" || status === "disconnected") {
+      try {
+        await onStopSession(sessionId);
+      } catch {
+        // La sesión puede estar detenida parcialmente tras un fallo de Chromium.
+      }
+    }
+
+    if (!status || needsSessionStart(status)) {
+      try {
+        await onStartSession(sessionId);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "";
+
+        if (!isStartIgnorableError(message)) {
+          throw error;
+        }
+      }
     }
   }
 
   async function handleQrRequest(sessionId: string) {
     setBusySessionId(sessionId);
-    setFeedback(null);
+    setQrCode(null);
+
+    const session = sessions.find((item) => item.id === sessionId);
 
     try {
-      const nextQrCode = await onLoadQrCode(sessionId);
+      notify.info("Iniciando sesión para generar el QR...");
+      await ensureSessionRunning(sessionId, session?.status);
+
+      const nextQrCode = await loadQrWithRetry(sessionId);
       setQrCode(nextQrCode);
+      onSelectSession(sessionId);
+      try {
+        await syncActiveSessionToServer(sessionId);
+      } catch {
+        // Se volverá a sincronizar cuando la sesión pase a «ready».
+      }
+      notify.success("Código QR listo. Escanéalo con WhatsApp.");
     } catch (error) {
-      setFeedback(error instanceof Error ? error.message : "No fue posible obtener el QR.");
+      notify.error(error instanceof Error ? error.message : "No fue posible obtener el QR.");
     } finally {
       setBusySessionId(null);
     }
@@ -85,7 +161,6 @@ export function SessionsPanel({
 
   async function runAction(sessionId: string, action: "start" | "stop" | "delete") {
     setBusySessionId(sessionId);
-    setFeedback(null);
 
     try {
       if (action === "start") {
@@ -99,8 +174,10 @@ export function SessionsPanel({
       if (action === "delete") {
         await onDeleteSession(sessionId);
       }
+
+      notify.success("Acción ejecutada correctamente.");
     } catch (error) {
-      setFeedback(error instanceof Error ? error.message : "No fue posible ejecutar la acción.");
+      notify.error(error instanceof Error ? error.message : "No fue posible ejecutar la acción.");
     } finally {
       setBusySessionId(null);
     }
@@ -126,8 +203,6 @@ export function SessionsPanel({
             Crear sesión
           </button>
         </form>
-
-        {feedback ? <div className="mb-4 rounded-2xl bg-surface-container-low px-4 py-3 text-sm text-on-surface-variant">{feedback}</div> : null}
 
         <div className="space-y-4">
           {sessions.length ? (
@@ -231,7 +306,7 @@ export function SessionsPanel({
               </div>
             ) : (
               <div className="rounded-[1.5rem] bg-surface-container-low p-6 text-sm text-on-surface-variant">
-                Usa el botón <span className="font-semibold text-primary">Ver QR</span> en una sesión para mostrar el código de autenticación aquí.
+                Pulsa <span className="font-semibold text-primary">Ver QR</span> para iniciar la sesión y mostrar el código de autenticación aquí.
               </div>
             )}
           </div>

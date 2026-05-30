@@ -1,10 +1,166 @@
-import type { DashboardStat, Departure, PendingItem } from "@/lib/admin/types";
+import type {
+  BookingChannelMetric,
+  DashboardStat,
+  Departure,
+  PendingItem,
+  RecentSaleRow,
+  SalesDataPoint,
+  TopClientMetric,
+  TourRevenueMetric,
+} from "@/lib/admin/types";
 
 export const dashboardStats: DashboardStat[] = [
   {
-    label: "Ingresos de la semana",
-    value: "$12.450",
-    icon: "bar_chart",
+    label: "Ventas del mes",
+    value: "$48.250",
+    icon: "payments",
+    change: "+18.4%",
+    tone: "positive",
+  },
+  {
+    label: "Clientes activos",
+    value: "1.284",
+    icon: "groups",
+    change: "+12%",
+    tone: "default",
+  },
+  {
+    label: "Reservas confirmadas",
+    value: "186",
+    icon: "confirmation_number",
+    change: "+9.2%",
+    tone: "positive",
+  },
+  {
+    label: "Ticket promedio",
+    value: "$259",
+    icon: "sell",
+    change: "+4.1%",
+    tone: "default",
+  },
+];
+
+export const monthlySales: SalesDataPoint[] = [
+  { month: "Ene", sales: 28400, bookings: 98 },
+  { month: "Feb", sales: 31200, bookings: 112 },
+  { month: "Mar", sales: 36800, bookings: 128 },
+  { month: "Abr", sales: 42100, bookings: 145 },
+  { month: "May", sales: 39500, bookings: 138 },
+  { month: "Jun", sales: 48250, bookings: 186 },
+];
+
+export const tourRevenueMetrics: TourRevenueMetric[] = [
+  { tour: "Islas del Rosario VIP", revenue: 14200, bookings: 48 },
+  { tour: "Cartagena Histórica", revenue: 9800, bookings: 62 },
+  { tour: "Tayrona Aventura", revenue: 8600, bookings: 34 },
+  { tour: "Playa Barú", revenue: 7200, bookings: 28 },
+  { tour: "Sunset Catamarán", revenue: 8450, bookings: 14 },
+];
+
+export const bookingChannels: BookingChannelMetric[] = [
+  { name: "Sitio web", value: 42, color: "#001e40" },
+  { name: "WhatsApp", value: 31, color: "#fecb00" },
+  { name: "Agencias", value: 18, color: "#00a6e4" },
+  { name: "Referidos", value: 9, color: "#745b00" },
+];
+
+export const topClients: TopClientMetric[] = [
+  {
+    id: "cli-1",
+    name: "María Sánchez",
+    email: "maria.sanchez@email.com",
+    bookings: 12,
+    totalSpent: 3240,
+    lastBooking: "28 may 2026",
+  },
+  {
+    id: "cli-2",
+    name: "John Doe",
+    email: "john.doe@email.com",
+    bookings: 8,
+    totalSpent: 2180,
+    lastBooking: "27 may 2026",
+  },
+  {
+    id: "cli-3",
+    name: "Claire Laurent",
+    email: "claire.l@email.com",
+    bookings: 6,
+    totalSpent: 1950,
+    lastBooking: "25 may 2026",
+  },
+  {
+    id: "cli-4",
+    name: "Robert King",
+    email: "robert.king@email.com",
+    bookings: 5,
+    totalSpent: 1420,
+    lastBooking: "24 may 2026",
+  },
+  {
+    id: "cli-5",
+    name: "Elena Rodríguez",
+    email: "elena.r@email.com",
+    bookings: 4,
+    totalSpent: 1180,
+    lastBooking: "22 may 2026",
+  },
+];
+
+export const recentSales: RecentSaleRow[] = [
+  {
+    id: "#HT-9821",
+    customer: "María Sánchez",
+    tour: "Rosario Islands Day Trip",
+    date: "29 may 2026",
+    amount: 125,
+    paymentStatus: "paid",
+    approvalStatus: "confirmed",
+  },
+  {
+    id: "#HT-9822",
+    customer: "John Doe",
+    tour: "Old City Food Tour",
+    date: "29 may 2026",
+    amount: 65,
+    paymentStatus: "pending",
+    approvalStatus: "pending",
+  },
+  {
+    id: "#HT-9823",
+    customer: "Claire Laurent",
+    tour: "Sunset Catamaran Cruise",
+    date: "28 may 2026",
+    amount: 210,
+    paymentStatus: "paid",
+    approvalStatus: "confirmed",
+  },
+  {
+    id: "#HT-9824",
+    customer: "Robert King",
+    tour: "Mangrove Kayaking",
+    date: "28 may 2026",
+    amount: 45,
+    paymentStatus: "paid",
+    approvalStatus: "confirmed",
+  },
+  {
+    id: "#HT-9825",
+    customer: "Mark Thompson",
+    tour: "Private Yacht Charter",
+    date: "27 may 2026",
+    amount: 1200,
+    paymentStatus: "pending",
+    approvalStatus: "pending",
+  },
+  {
+    id: "#HT-9826",
+    customer: "Elena Rodríguez",
+    tour: "Mud Volcano Tour",
+    date: "27 may 2026",
+    amount: 380,
+    paymentStatus: "refunded",
+    approvalStatus: "cancelled",
   },
 ];
 
@@ -75,7 +231,7 @@ export const quickActions = [
     title: "Nuevo tour",
     description: "Crea un itinerario personalizado",
     icon: "explore",
-    href: "/admin/tours/nuevo",
+    href: "/admin/tours",
   },
   {
     title: "Generar reporte",
@@ -84,3 +240,11 @@ export const quickActions = [
     href: "/admin/tarifas",
   },
 ];
+
+export function formatCurrency(value: number) {
+  return new Intl.NumberFormat("es-CO", {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: 0,
+  }).format(value);
+}

@@ -3,12 +3,14 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { AdminNavItem } from "@/lib/admin/types";
+import { AdminLogoutButton } from "@/components/admin/admin-logout-button";
 
 const navItems: AdminNavItem[] = [
   { label: "Dashboard", href: "/admin", icon: "dashboard", match: "exact" },
   { label: "Reservas", href: "/admin/reservas", icon: "calendar_month", match: "startsWith" },
+  { label: "Pagos", href: "/admin/pagos", icon: "payments", match: "startsWith" },
+  { label: "Promociones", href: "/admin/promociones", icon: "sell", match: "startsWith" },
   { label: "Tours", href: "/admin/tours", icon: "explore", match: "startsWith" },
-  { label: "Tarifas", href: "/admin/tarifas", icon: "local_activity", match: "startsWith" },
   { label: "WhatsApp", href: "/admin/whatsapp", icon: "forum", match: "startsWith" },
   { label: "Configuración", href: "/admin/configuracion", icon: "settings", match: "startsWith" },
 ];
@@ -70,13 +72,7 @@ export function AdminSidebar() {
             <span className="material-symbols-outlined text-[18px]">help</span>
             Soporte
           </button>
-          <Link
-            href="/admin/login"
-            className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm text-white/80 transition hover:bg-white/10 hover:text-white"
-          >
-            <span className="material-symbols-outlined text-[18px]">logout</span>
-            Salir
-          </Link>
+          <AdminLogoutButton />
         </div>
       </div>
     </aside>

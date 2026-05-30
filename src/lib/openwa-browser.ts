@@ -38,10 +38,14 @@ async function openWaBrowserRequest<T>(path: string, options: RequestOptions = {
     cache: "no-store",
   });
 
-  const payload = (await response.json().catch(() => null)) as { error?: string } | T | null;
+  const payload = (await response.json().catch(() => null)) as { error?: string; message?: string } | T | null;
 
   if (!response.ok) {
-    throw new Error((payload as { error?: string } | null)?.error ?? "No fue posible consultar OpenWA.");
+    const apiError =
+      (payload as { error?: string; message?: string } | null)?.error ??
+      (payload as { error?: string; message?: string } | null)?.message;
+
+    throw new Error(apiError ?? "No fue posible consultar OpenWA.");
   }
 
   return payload as T;

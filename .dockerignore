@@ -1,0 +1,11 @@
+node_modules
+.next
+.git
+.gitignore
+.env
+.env.*
+!.env.docker.example
+docker/openwa
+README.md
+terminals
+*.md

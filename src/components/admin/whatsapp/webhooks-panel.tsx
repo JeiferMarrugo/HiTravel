@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import type { OpenWaWebhook } from "@/lib/admin/types";
+import { notify } from "@/lib/toast";
 
 type WebhooksPanelProps = {
   globalWebhooks: OpenWaWebhook[];
@@ -53,7 +54,6 @@ export function WebhooksPanel({
   const [events, setEvents] = useState(defaultEvents);
   const [secret, setSecret] = useState("");
   const [retryCount, setRetryCount] = useState(3);
-  const [feedback, setFeedback] = useState<string | null>(null);
 
   const selectedWebhook = useMemo(
     () => sessionWebhooks.find((webhook) => webhook.id === selectedWebhookId) ?? null,
@@ -79,36 +79,36 @@ export function WebhooksPanel({
       setUrl("");
       setSecret("");
       setEvents(defaultEvents);
-      setFeedback("Webhook creado correctamente.");
+      notify.success("Webhook creado correctamente.");
     } catch (error) {
-      setFeedback(error instanceof Error ? error.message : "No fue posible crear el webhook.");
+      notify.error(error instanceof Error ? error.message : "No fue posible crear el webhook.");
     }
   }
 
   async function handleTestWebhook(webhookId: string) {
     try {
       await onTestWebhook(webhookId);
-      setFeedback("Webhook probado correctamente.");
+      notify.success("Webhook probado correctamente.");
     } catch (error) {
-      setFeedback(error instanceof Error ? error.message : "No fue posible probar el webhook.");
+      notify.error(error instanceof Error ? error.message : "No fue posible probar el webhook.");
     }
   }
 
   async function handleToggleActive(webhook: OpenWaWebhook) {
     try {
       await onUpdateWebhook(webhook.id, { active: !webhook.active });
-      setFeedback("Estado del webhook actualizado.");
+      notify.success("Estado del webhook actualizado.");
     } catch (error) {
-      setFeedback(error instanceof Error ? error.message : "No fue posible actualizar el webhook.");
+      notify.error(error instanceof Error ? error.message : "No fue posible actualizar el webhook.");
     }
   }
 
   async function handleDeleteWebhook(webhookId: string) {
     try {
       await onDeleteWebhook(webhookId);
-      setFeedback("Webhook eliminado.");
+      notify.success("Webhook eliminado.");
     } catch (error) {
-      setFeedback(error instanceof Error ? error.message : "No fue posible eliminar el webhook.");
+      notify.error(error instanceof Error ? error.message : "No fue posible eliminar el webhook.");
     }
   }
 
@@ -155,8 +155,6 @@ export function WebhooksPanel({
             Crear webhook
           </button>
         </form>
-
-        {feedback ? <div className="mt-4 rounded-2xl bg-surface-container-low px-4 py-3 text-sm text-on-surface-variant">{feedback}</div> : null}
 
         <div className="mt-6 max-h-[520px] space-y-3 overflow-y-auto pr-1">
           {sessionWebhooks.length ? (

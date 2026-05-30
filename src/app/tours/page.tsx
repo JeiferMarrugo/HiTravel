@@ -1,8 +1,9 @@
 import { TourCard } from "@/components/tour-card";
 import { TopNav, ToursFooter, WhatsappFab } from "@/components/site-chrome";
-import { tours } from "@/lib/site-data";
+import { getPublicTours } from "@/lib/catalog/public";
+import { getVisitorPricingContext } from "@/lib/pricing/visitor-currency";
 
-const categories = ["Todos los tours", "Playa y mar", "Historia y cultura", "Aventura y naturaleza"];
+export const dynamic = "force-dynamic";
 
 type ToursPageProps = {
   searchParams?: Promise<{
@@ -15,24 +16,30 @@ type ToursPageProps = {
 
 export default async function ToursPage({ searchParams }: ToursPageProps) {
   const params = (await searchParams) ?? {};
+  const { content, displayCurrency, usdCopRate } = await getVisitorPricingContext();
+  const tours = await getPublicTours();
+  const { toursPage } = content;
   const destinationFilter = params.destino?.trim() ?? "";
   const adults = Number(params.adultos ?? "0");
   const children = Number(params.ninos ?? "0");
   const passengerSummary = [adults > 0 ? `${adults} adulto${adults === 1 ? "" : "s"}` : null, children > 0 ? `${children} niño${children === 1 ? "" : "s"}` : null]
     .filter(Boolean)
     .join(", ");
-  const orderedTours = [tours[3], tours[1], tours[2], tours[0]];
+  const categories = [
+    "Todos",
+    ...new Set(tours.map((tour) => tour.category).filter(Boolean)),
+  ];
   const filteredTours = destinationFilter
-    ? orderedTours.filter(
+    ? tours.filter(
         (tour) =>
           tour.country.toLowerCase().includes(destinationFilter.toLowerCase()) ||
           tour.location.toLowerCase().includes(destinationFilter.toLowerCase()),
       )
-    : orderedTours;
+    : tours;
 
   return (
     <>
-      <TopNav active="tours" />
+      <TopNav content={content} active="tours" displayCurrency={displayCurrency} />
 
       <main className="mx-auto max-w-7xl px-4 pb-20 pt-24 md:px-16">
         <header className="mb-12">
@@ -107,14 +114,21 @@ export default async function ToursPage({ searchParams }: ToursPageProps) {
             {filteredTours.length ? (
               <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
                 {filteredTours.map((tour) => (
-                  <TourCard key={tour.slug} tour={tour} />
+                  <TourCard
+                    key={tour.slug}
+                    tour={tour}
+                    displayCurrency={displayCurrency}
+                    usdCopRate={usdCopRate}
+                  />
                 ))}
               </div>
             ) : (
               <div className="rounded-[2rem] bg-white p-10 text-center coastal-shadow">
-                <h2 className="text-[22px] font-semibold text-primary">No encontramos tours para ese destino</h2>
+                <h2 className="text-[22px] font-semibold text-primary">
+                  {tours.length ? toursPage.emptyWithToursTitle : toursPage.emptyCatalogTitle}
+                </h2>
                 <p className="mt-3 text-on-surface-variant">
-                  Prueba con otro país cargado desde el panel administrativo o revisa la lista completa de experiencias.
+                  {tours.length ? toursPage.emptyWithToursText : toursPage.emptyCatalogText}
                 </p>
               </div>
             )}
@@ -144,8 +158,8 @@ export default async function ToursPage({ searchParams }: ToursPageProps) {
         </div>
       </main>
 
-      <ToursFooter />
-      <WhatsappFab />
+      <ToursFooter content={content} />
+      <WhatsappFab content={content} />
     </>
   );
 }

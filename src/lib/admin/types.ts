@@ -13,6 +13,43 @@ export type DashboardStat = {
   change?: string;
 };
 
+export type SalesDataPoint = {
+  month: string;
+  sales: number;
+  bookings: number;
+};
+
+export type TourRevenueMetric = {
+  tour: string;
+  revenue: number;
+  bookings: number;
+};
+
+export type BookingChannelMetric = {
+  name: string;
+  value: number;
+  color: string;
+};
+
+export type TopClientMetric = {
+  id: string;
+  name: string;
+  email: string;
+  bookings: number;
+  totalSpent: number;
+  lastBooking: string;
+};
+
+export type RecentSaleRow = {
+  id: string;
+  customer: string;
+  tour: string;
+  date: string;
+  amount: number;
+  paymentStatus: "paid" | "pending" | "refunded";
+  approvalStatus: "confirmed" | "pending" | "cancelled";
+};
+
 export type Departure = {
   id: string;
   title: string;

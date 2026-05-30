@@ -1,8 +1,7 @@
 "use client";
 
 import { useState } from "react";
-
-type FormStatus = "idle" | "loading" | "success" | "error";
+import { notify } from "@/lib/toast";
 
 const initialFormData = {
   email: "",
@@ -13,13 +12,11 @@ const initialFormData = {
 
 export function ContactForm() {
   const [formData, setFormData] = useState(initialFormData);
-  const [status, setStatus] = useState<FormStatus>("idle");
-  const [feedbackMessage, setFeedbackMessage] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setStatus("loading");
-    setFeedbackMessage("");
+    setIsSubmitting(true);
 
     try {
       const response = await fetch("/api/whatsapp/contact", {
@@ -36,16 +33,14 @@ export function ContactForm() {
         throw new Error(payload.error ?? "No fue posible enviar tu mensaje.");
       }
 
-      setStatus("success");
-      setFeedbackMessage(payload.message ?? "Mensaje enviado correctamente.");
+      notify.success(payload.message ?? "Mensaje enviado correctamente.");
       setFormData(initialFormData);
     } catch (error) {
-      setStatus("error");
-      setFeedbackMessage(error instanceof Error ? error.message : "No fue posible enviar tu mensaje.");
+      notify.error(error instanceof Error ? error.message : "No fue posible enviar tu mensaje.");
+    } finally {
+      setIsSubmitting(false);
     }
   }
-
-  const isSubmitting = status === "loading";
 
   return (
     <form className="space-y-6" onSubmit={handleSubmit}>
@@ -109,17 +104,6 @@ export function ContactForm() {
           className="w-full rounded-lg border border-outline-variant/30 bg-surface-container p-3 outline-none transition-all focus:border-on-tertiary-container focus:ring-2 focus:ring-on-tertiary-container"
         />
       </div>
-
-      {feedbackMessage ? (
-        <div
-          className={`rounded-2xl px-4 py-3 text-sm ${
-            status === "success" ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700"
-          }`}
-          aria-live="polite"
-        >
-          {feedbackMessage}
-        </div>
-      ) : null}
 
       <button
         type="submit"

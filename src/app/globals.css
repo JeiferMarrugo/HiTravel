@@ -59,3 +59,20 @@ body {
 .section-shell {
   @apply mx-auto max-w-shell px-4 md:px-16;
 }
+
+.phone-field-root {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.phone-field-root .PhoneInputCountry {
+  margin-right: 0.25rem;
+}
+
+.phone-field-root .PhoneInputInput {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+}

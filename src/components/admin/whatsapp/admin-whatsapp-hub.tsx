@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { ChatList } from "@/components/admin/whatsapp/chat-list";
 import { ChatThread } from "@/components/admin/whatsapp/chat-thread";
 import { ContactsPanel } from "@/components/admin/whatsapp/contacts-panel";
@@ -20,6 +20,7 @@ import type {
   OpenWaOverviewStats,
   OpenWaSessionStats,
 } from "@/lib/admin/types";
+import { syncActiveSessionToServer } from "@/lib/whatsapp/sync-active-session-client";
 import {
   checkOpenWaNumber,
   createOpenWaGroup,
@@ -116,6 +117,16 @@ export function AdminWhatsAppHub({ fallbackSessionId }: AdminWhatsAppHubProps) {
   const { isLoading: sessionsLoading, refreshSessions, selectedSession, selectedSessionId, sessions, setSelectedSessionId } = useOpenWaSession({
     fallbackSessionId,
   });
+
+  useEffect(() => {
+    if (!selectedSessionId || selectedSession?.status !== "ready") {
+      return;
+    }
+
+    void syncActiveSessionToServer(selectedSessionId).catch(() => {
+      // El hub sigue funcionando aunque falle la sincronización con la BD.
+    });
+  }, [selectedSessionId, selectedSession?.status]);
 
   const loadInboxChats = useCallback(async () => {
     if (!selectedSessionId) {

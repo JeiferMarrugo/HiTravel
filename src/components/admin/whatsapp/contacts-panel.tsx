@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import type { OpenWaContact } from "@/lib/admin/types";
+import { notify } from "@/lib/toast";
 
 type ContactsPanelProps = {
   contacts: OpenWaContact[];
@@ -22,7 +23,6 @@ export function ContactsPanel({
 }: ContactsPanelProps) {
   const [numberToCheck, setNumberToCheck] = useState("");
   const [selectedContactId, setSelectedContactId] = useState<string | null>(null);
-  const [feedback, setFeedback] = useState<string | null>(null);
   const [profilePictureUrl, setProfilePictureUrl] = useState<string | null>(null);
 
   const selectedContact = useMemo(
@@ -39,9 +39,9 @@ export function ContactsPanel({
 
     try {
       const result = await onCheckNumber(numberToCheck.trim());
-      setFeedback(result.exists ? `El número sí existe en WhatsApp: ${result.whatsappId}` : "Ese número no aparece en WhatsApp.");
+      notify.info(result.exists ? `El número sí existe en WhatsApp: ${result.whatsappId}` : "Ese número no aparece en WhatsApp.");
     } catch (error) {
-      setFeedback(error instanceof Error ? error.message : "No fue posible validar el número.");
+      notify.error(error instanceof Error ? error.message : "No fue posible validar el número.");
     }
   }
 
@@ -49,17 +49,18 @@ export function ContactsPanel({
     try {
       const url = await onLoadProfilePicture(contactId);
       setProfilePictureUrl(url ?? null);
+      notify.success("Foto de perfil cargada.");
     } catch (error) {
-      setFeedback(error instanceof Error ? error.message : "No fue posible consultar la foto.");
+      notify.error(error instanceof Error ? error.message : "No fue posible consultar la foto.");
     }
   }
 
   async function handleToggleBlock(contactId: string, action: "block" | "unblock") {
     try {
       await onToggleBlock(contactId, action);
-      setFeedback(action === "block" ? "Contacto bloqueado." : "Contacto desbloqueado.");
+      notify.success(action === "block" ? "Contacto bloqueado." : "Contacto desbloqueado.");
     } catch (error) {
-      setFeedback(error instanceof Error ? error.message : "No fue posible ejecutar la acción.");
+      notify.error(error instanceof Error ? error.message : "No fue posible ejecutar la acción.");
     }
   }
 
@@ -83,8 +84,6 @@ export function ContactsPanel({
             Validar
           </button>
         </form>
-
-        {feedback ? <div className="mb-4 rounded-2xl bg-surface-container-low px-4 py-3 text-sm text-on-surface-variant">{feedback}</div> : null}
 
         <div className="max-h-[560px] space-y-3 overflow-y-auto pr-1">
           {contacts.length ? (

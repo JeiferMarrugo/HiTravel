@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { readStoredCountries } from "@/lib/countries";
+import { defaultCountries } from "@/lib/countries";
 
 const weekDays = ["Do", "Lu", "Ma", "Mi", "Ju", "Vi", "Sa"];
 
@@ -30,7 +30,11 @@ function isSameCalendarDay(firstDate: Date, secondDate: Date) {
   );
 }
 
-export function CountrySearch() {
+type CountrySearchProps = {
+  countries: string[];
+};
+
+export function CountrySearch({ countries: initialCountries }: CountrySearchProps) {
   const router = useRouter();
   const datePickerRef = useRef<HTMLDivElement>(null);
   const passengerPickerRef = useRef<HTMLDivElement>(null);
@@ -38,7 +42,9 @@ export function CountrySearch() {
   const [travelDate, setTravelDate] = useState("");
   const [adults, setAdults] = useState(2);
   const [children, setChildren] = useState(0);
-  const [countries, setCountries] = useState<string[]>(() => readStoredCountries());
+  const [countries, setCountries] = useState<string[]>(
+    () => (initialCountries.length ? initialCountries : defaultCountries),
+  );
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showPassengers, setShowPassengers] = useState(false);
@@ -48,18 +54,8 @@ export function CountrySearch() {
   });
 
   useEffect(() => {
-    const handleStorage = () => {
-      setCountries(readStoredCountries());
-    };
-
-    window.addEventListener("storage", handleStorage);
-    window.addEventListener("countries-updated", handleStorage as EventListener);
-
-    return () => {
-      window.removeEventListener("storage", handleStorage);
-      window.removeEventListener("countries-updated", handleStorage as EventListener);
-    };
-  }, []);
+    setCountries(initialCountries.length ? initialCountries : defaultCountries);
+  }, [initialCountries]);
 
   useEffect(() => {
     function handlePointerDown(event: MouseEvent) {

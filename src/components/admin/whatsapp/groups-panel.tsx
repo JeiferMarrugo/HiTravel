@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import type { OpenWaGroup } from "@/lib/admin/types";
+import { notify } from "@/lib/toast";
 
 type GroupsPanelProps = {
   groups: OpenWaGroup[];
@@ -36,7 +37,6 @@ export function GroupsPanel({
   const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
   const [groupName, setGroupName] = useState("");
   const [participants, setParticipants] = useState("");
-  const [feedback, setFeedback] = useState<string | null>(null);
   const [inviteLink, setInviteLink] = useState<string | null>(null);
   const [subject, setSubject] = useState("");
   const [description, setDescription] = useState("");
@@ -57,9 +57,9 @@ export function GroupsPanel({
       await onCreateGroup(groupName.trim(), parseParticipants(participants));
       setGroupName("");
       setParticipants("");
-      setFeedback("Grupo creado correctamente.");
+      notify.success("Grupo creado correctamente.");
     } catch (error) {
-      setFeedback(error instanceof Error ? error.message : "No fue posible crear el grupo.");
+      notify.error(error instanceof Error ? error.message : "No fue posible crear el grupo.");
     }
   }
 
@@ -70,7 +70,7 @@ export function GroupsPanel({
     try {
       await onSelectGroup(groupId);
     } catch (error) {
-      setFeedback(error instanceof Error ? error.message : "No fue posible cargar el grupo.");
+      notify.error(error instanceof Error ? error.message : "No fue posible cargar el grupo.");
     }
   }
 
@@ -81,9 +81,9 @@ export function GroupsPanel({
 
     try {
       await onUpdateField(selectedGroupId, action, value.trim());
-      setFeedback(action === "subject" ? "Nombre del grupo actualizado." : "Descripción actualizada.");
+      notify.success(action === "subject" ? "Nombre del grupo actualizado." : "Descripción actualizada.");
     } catch (error) {
-      setFeedback(error instanceof Error ? error.message : "No fue posible guardar el cambio.");
+      notify.error(error instanceof Error ? error.message : "No fue posible guardar el cambio.");
     }
   }
 
@@ -96,9 +96,9 @@ export function GroupsPanel({
 
     try {
       await onRunAction(selectedGroupId, action, parseParticipants(participants));
-      setFeedback("Acción ejecutada correctamente.");
+      notify.success("Acción ejecutada correctamente.");
     } catch (error) {
-      setFeedback(error instanceof Error ? error.message : "No fue posible ejecutar la acción.");
+      notify.error(error instanceof Error ? error.message : "No fue posible ejecutar la acción.");
     }
   }
 
@@ -110,8 +110,9 @@ export function GroupsPanel({
     try {
       const result = await onGetInviteCode(selectedGroupId);
       setInviteLink(result.inviteLink);
+      notify.success("Enlace de invitación obtenido.");
     } catch (error) {
-      setFeedback(error instanceof Error ? error.message : "No fue posible obtener el enlace.");
+      notify.error(error instanceof Error ? error.message : "No fue posible obtener el enlace.");
     }
   }
 
@@ -173,8 +174,6 @@ export function GroupsPanel({
           <h2 className="text-[22px] font-semibold text-primary">Detalle del grupo</h2>
           <p className="mt-2 text-sm text-on-surface-variant">Actualiza nombre, descripción, participantes e invitación.</p>
         </div>
-
-        {feedback ? <div className="mb-4 rounded-2xl bg-surface-container-low px-4 py-3 text-sm text-on-surface-variant">{feedback}</div> : null}
 
         {selectedGroup ? (
           <div className="space-y-5">
