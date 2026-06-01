@@ -27,6 +27,8 @@ function parseEnvLine(line) {
 
 export function loadEnvFiles() {
   const files = [".env", ".env.docker", ".env.local"];
+  const shellEnv = { ...process.env };
+  const mergedFromFiles = {};
 
   for (const fileName of files) {
     const filePath = path.join(process.cwd(), fileName);
@@ -41,7 +43,13 @@ export function loadEnvFiles() {
         continue;
       }
 
-      process.env[parsed.key] = parsed.value;
+      mergedFromFiles[parsed.key] = parsed.value;
+    }
+  }
+
+  for (const [key, value] of Object.entries(mergedFromFiles)) {
+    if (shellEnv[key] === undefined) {
+      process.env[key] = value;
     }
   }
 }
