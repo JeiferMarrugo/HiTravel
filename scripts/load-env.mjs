@@ -25,6 +25,8 @@ function parseEnvLine(line) {
   return { key, value };
 }
 
+export { parseEnvLine };
+
 export function loadEnvFiles() {
   const files = [".env", ".env.docker", ".env.local"];
   const shellEnv = { ...process.env };

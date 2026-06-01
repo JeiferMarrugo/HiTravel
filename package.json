@@ -27,7 +27,8 @@
     "docker:ps": "docker compose ps",
     "docker:openwa:clean-locks": "docker exec hitravel-openwa sh -c \"find /app/data/sessions \\\\( -name SingletonLock -o -name SingletonCookie -o -name SingletonSocket \\\\) -delete 2>/dev/null || true\"",
     "tunnel": "ngrok http 3000",
-    "tunnel:url": "node scripts/ngrok-url.mjs"
+    "tunnel:url": "node scripts/ngrok-url.mjs",
+    "db:migrate-to-neon": "node scripts/migrate-local-to-neon.mjs"
   },
   "keywords": [],
   "author": "",
