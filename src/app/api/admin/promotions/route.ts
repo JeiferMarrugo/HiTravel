@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+import { readAdminFormBody } from "@/lib/admin/read-admin-form-body";
+import { respondAdminFormSave } from "@/lib/admin/respond-admin-form-save";
 import { isSessionError, requireAdminSession } from "@/lib/auth/require-session";
 import { createPromotion, listPromotions } from "@/lib/catalog/promotions";
 import type { CreatePromotionInput } from "@/lib/catalog/types";
@@ -54,9 +56,9 @@ export async function POST(request: Request) {
   }
 
   try {
-    const body = parsePromotionBody((await request.json()) as Record<string, unknown>);
-    const promotion = await createPromotion(body);
-    return NextResponse.json(promotion, { status: 201 });
+    const { body, prefersJson } = await readAdminFormBody<Record<string, unknown>>(request);
+    const promotion = await createPromotion(parsePromotionBody(body));
+    return respondAdminFormSave(request, "/admin/promociones?saved=1", promotion, prefersJson, { status: 201 });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Error al crear promoción.";
     const status =

@@ -213,9 +213,9 @@ export function CountrySearch({ countries: initialCountries }: CountrySearchProp
   }
 
   return (
-    <div className="glass-card mx-auto flex w-full max-w-5xl flex-col gap-2 rounded-[2rem] p-2 coastal-shadow md:flex-row md:items-center">
-      <div className="relative flex flex-1 items-center gap-3 px-6">
-        <span className="material-symbols-outlined text-primary">location_on</span>
+    <div className="glass-card mx-auto flex w-full max-w-[min(100%,42rem)] flex-col gap-1 rounded-2xl p-2 coastal-shadow sm:max-w-5xl sm:gap-2 sm:rounded-[2rem] md:flex-row md:items-center">
+      <div className="relative flex min-h-[52px] flex-1 items-center gap-2 border-b border-outline-variant/20 px-3 py-2 sm:gap-3 sm:border-b-0 sm:px-6 md:border-b-0">
+        <span className="material-symbols-outlined shrink-0 text-primary">location_on</span>
         <input
           type="text"
           value={destination}
@@ -260,8 +260,8 @@ export function CountrySearch({ countries: initialCountries }: CountrySearchProp
 
       <div className="hidden h-8 w-px self-center bg-outline-variant/30 md:block" />
 
-      <div ref={datePickerRef} className="relative flex min-w-0 flex-1 items-center gap-3 px-6">
-        <span className="material-symbols-outlined text-primary">calendar_today</span>
+      <div ref={datePickerRef} className="relative flex min-h-[52px] min-w-0 flex-1 items-center gap-2 border-b border-outline-variant/20 px-3 py-2 sm:gap-3 sm:border-b-0 sm:px-6 md:border-b-0">
+        <span className="material-symbols-outlined shrink-0 text-primary">calendar_today</span>
         <button type="button" onClick={openDatePicker} className="min-w-0 flex-1 text-left">
           <span className={`block truncate text-sm md:text-base ${formattedTravelDate ? "font-medium text-on-surface" : "text-on-surface-variant/60"}`}>
             {formattedTravelDate || "Selecciona tu fecha"}
@@ -350,8 +350,8 @@ export function CountrySearch({ countries: initialCountries }: CountrySearchProp
 
       <div className="hidden h-8 w-px self-center bg-outline-variant/30 md:block" />
 
-      <div ref={passengerPickerRef} className="relative flex min-w-0 flex-1 items-center gap-3 px-6">
-        <span className="material-symbols-outlined text-primary">groups</span>
+      <div ref={passengerPickerRef} className="relative flex min-h-[52px] min-w-0 flex-1 items-center gap-2 px-3 py-2 sm:gap-3 sm:px-6">
+        <span className="material-symbols-outlined shrink-0 text-primary">groups</span>
         <button
           type="button"
           onClick={() => {
@@ -434,7 +434,7 @@ export function CountrySearch({ countries: initialCountries }: CountrySearchProp
       <button
         type="button"
         onClick={() => submitSearch()}
-        className="flex items-center justify-center gap-2 rounded-full bg-secondary-container px-8 py-4 font-semibold text-on-secondary-container transition-colors hover:bg-yellow-300"
+        className="flex min-h-[48px] w-full items-center justify-center gap-2 rounded-full bg-secondary-container px-6 py-3.5 text-sm font-semibold text-on-secondary-container transition-colors hover:bg-yellow-300 sm:min-h-[52px] md:w-auto md:px-8 md:py-4"
       >
         <span className="material-symbols-outlined">search</span>
         <span>Buscar</span>

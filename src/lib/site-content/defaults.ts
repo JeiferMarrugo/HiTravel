@@ -9,14 +9,12 @@ const IMG = {
     "https://lh3.googleusercontent.com/aida-public/AB6AXuCpWt9hXp92Vh_WU3xK4jMeCco-lqA59em3Pw9VYIzpH70cYB8voOp4Ce07zSnWhEZInLypop3yNZhyjcuO6XBjN87TYIgtlILroBST-1XRH_ymVnSH17jU9GPkIaen8viYaZ_Nmtz2CVD9MOkrhyjnpbaPRqSLPOA7epF-KNXKX40ep543ch9CyUdYLuRk_uFiNPts6z0DYZVn1Pk1TnNhOQqrxr2h0NkLKCtWrjcTFFfwTU93oCVN1s0XQ4e5MmPtfyI1L2xuPA",
   contactMap:
     "https://lh3.googleusercontent.com/aida-public/AB6AXuBqOO1H9de2jdr14vXD2EJU2L52XVX7mSHAcf54dKxjE62bzYmK79H7Y1RgqN7oFO55N4HcEMbQR2l-lCSDL8gv-iFcVDpGa3CqYm0QtrQQBUfBUt3ye3KWMWBOa8VQAKNjyy9Uyom1Ja3M4eGeTi6jQMSgyvlNZg5Ocn2PvpqVQp19HtRQ_ocBJnQ-CsPmxXOX4Q-x8oiUMUuz0WSm4x34lgVUKJzklzlmcsKmoI0x_lPCLSHwgQck5bTsQczyApaj8on2EAmOOw",
-  logo:
-    "https://lh3.googleusercontent.com/aida-public/AB6AXuBO5oDoomgBvwXYC2De_83fFELiB5C_XRgqL_mDl_2YzZTr9CfCZAtUbdpLZbprSLYJGPG8c_vqcF4DUZNPuKQPhOmK7MjAZUM7S_Skr9UUFJ27HylfEI3764dQ-AMf5VGewZ_iSQYG6kivmdRdrjlWzotqGVNjNxgN9TIOMFX3sJ-kkATVc0P_Tn66hd4bpdjKm8cytKfNI4SDGlvNyyMCyQ2gtA0QzElXVkvIcK1Qt6VXR61vKWtbIHZxMQo9Z3mqu6FLTkhVHg",
 };
 
 export const defaultSiteContent: SiteContent = {
   brand: {
     name: "HI TRAVEL",
-    logoUrl: IMG.logo,
+    logoUrl: "/images/logo.png",
     navCtaLabel: "Reserva ahora",
   },
   contact: {
@@ -34,11 +32,11 @@ export const defaultSiteContent: SiteContent = {
   },
   footer: {
     homeDescription:
-      "© 2024 HI TRAVEL. Todos los derechos reservados. La aventura te espera. Tu agencia de confianza para descubrir los rincones más bellos del Caribe.",
-    homeCopyright: "© 2024 HI TRAVEL. Todos los derechos reservados.",
+      "© 2026 HI TRAVEL. Todos los derechos reservados. La aventura te espera. Tu agencia de confianza para descubrir los rincones más bellos del Caribe.",
+    homeCopyright: "© 2026 HI TRAVEL. Todos los derechos reservados.",
     toursDescription: "Curadores de viajes enfocados en ofrecer experiencias seguras e inolvidables en el Caribe.",
     detailDescription: "Tu puerta de entrada a los destinos más exclusivos del Caribe. Curamos recuerdos, una ola a la vez.",
-    contactCopyright: "© 2024 HI TRAVEL. Todos los derechos reservados. La aventura te espera.",
+    contactCopyright: "© 2026 HI TRAVEL. Todos los derechos reservados. La aventura te espera.",
     locationLabel: "Cartagena, Colombia",
   },
   home: {

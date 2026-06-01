@@ -1,8 +1,6 @@
-import { mkdir, writeFile } from "node:fs/promises";
-import path from "node:path";
-import { randomUUID } from "node:crypto";
 import { NextResponse } from "next/server";
 import { isSessionError, requireAdminSession } from "@/lib/auth/require-session";
+import { storeUploadedFile } from "@/lib/uploads/store-file";
 
 const MAX_BYTES = 8 * 1024 * 1024;
 const ALLOWED_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "image/gif"]);
@@ -30,15 +28,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "El archivo supera el límite de 8 MB." }, { status: 400 });
     }
 
-    const extension = file.type.split("/")[1]?.replace("jpeg", "jpg") ?? "jpg";
-    const filename = `${randomUUID()}.${extension}`;
-    const uploadDir = path.join(process.cwd(), "public", "uploads", folder);
-    await mkdir(uploadDir, { recursive: true });
-
-    const buffer = Buffer.from(await file.arrayBuffer());
-    await writeFile(path.join(uploadDir, filename), buffer);
-
-    const url = `/uploads/${folder}/${filename}`;
+    const url = await storeUploadedFile(file, folder);
     return NextResponse.json({ url });
   } catch (error) {
     const message = error instanceof Error ? error.message : "No fue posible subir el archivo.";

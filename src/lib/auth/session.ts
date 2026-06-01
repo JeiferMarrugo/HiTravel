@@ -78,23 +78,33 @@ export async function refreshSessionToken(payload: SessionPayload): Promise<stri
     .sign(getSessionSecret());
 }
 
-export function getSessionCookieOptions() {
+export function getSessionCookieOptions(request?: Pick<Request, "headers">) {
+  const forwardedProto = request?.headers.get("x-forwarded-proto")?.split(",")[0]?.trim();
+  const secure =
+    process.env.NODE_ENV === "production" ||
+    forwardedProto === "https" ||
+    process.env.COOKIE_SECURE === "true";
+
   return {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    secure,
     sameSite: "lax" as const,
     path: "/",
     maxAge: SESSION_MAX_AGE_SECONDS,
   };
 }
 
-export async function setSessionCookieOnResponse(response: NextResponse, token: string) {
-  response.cookies.set(SESSION_COOKIE_NAME, token, getSessionCookieOptions());
+export async function setSessionCookieOnResponse(
+  response: NextResponse,
+  token: string,
+  request?: Pick<Request, "headers">,
+) {
+  response.cookies.set(SESSION_COOKIE_NAME, token, getSessionCookieOptions(request));
 }
 
-export function clearSessionCookieOnResponse(response: NextResponse) {
+export function clearSessionCookieOnResponse(response: NextResponse, request?: Pick<Request, "headers">) {
   response.cookies.set(SESSION_COOKIE_NAME, "", {
-    ...getSessionCookieOptions(),
+    ...getSessionCookieOptions(request),
     maxAge: 0,
   });
 }

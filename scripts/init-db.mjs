@@ -25,6 +25,7 @@ const sqlFiles = [
   "init-tour-reviews.sql",
   "init-whatsapp-enhancements.sql",
   "init-booking-travelers.sql",
+  "init-whatsapp-website-booking.sql",
 ];
 const client = new Client({ connectionString: databaseUrl });
 

@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+import { readAdminFormBody } from "@/lib/admin/read-admin-form-body";
+import { respondAdminFormSave } from "@/lib/admin/respond-admin-form-save";
 import { isSessionError, requireAdminSession } from "@/lib/auth/require-session";
 import { getBookingWithPayments, createBookingPayment } from "@/lib/catalog/payments";
 import type { CreateBookingPaymentInput, PaymentMethod } from "@/lib/catalog/types";
@@ -66,9 +68,15 @@ export async function POST(request: Request, context: RouteContext) {
   const { id } = await context.params;
 
   try {
-    const body = parsePaymentBody((await request.json()) as Record<string, unknown>);
-    const data = await createBookingPayment(id, body);
-    return NextResponse.json(data, { status: 201 });
+    const { body, prefersJson } = await readAdminFormBody<Record<string, unknown>>(request);
+    const data = await createBookingPayment(id, parsePaymentBody(body));
+    return respondAdminFormSave(
+      request,
+      `/admin/reservas/${id}?saved=payment`,
+      data,
+      prefersJson,
+      { status: 201 },
+    );
   } catch (error) {
     const message = error instanceof Error ? error.message : "Error al registrar pago.";
     const httpStatus =

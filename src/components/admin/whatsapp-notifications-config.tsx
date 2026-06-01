@@ -1,7 +1,9 @@
 "use client";
 
+import { adminFetch } from "@/lib/admin/admin-fetch";
+import { submitAdminJsonForm } from "@/lib/admin/submit-admin-json-form";
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type { OpenWaSession } from "@/lib/admin/types";
 import { listOpenWaSessions } from "@/lib/openwa-browser";
 import type { WhatsAppConfigPayload, WhatsAppMessageTemplate } from "@/lib/whatsapp/types";
@@ -11,18 +13,29 @@ type EditableTemplate = WhatsAppMessageTemplate & {
   bodyDraft: string;
 };
 
-export function WhatsAppNotificationsConfig() {
-  const [isLoading, setIsLoading] = useState(true);
+export function WhatsAppNotificationsConfig({
+  initialConfig,
+}: {
+  initialConfig?: WhatsAppConfigPayload;
+}) {
+  const [isLoading, setIsLoading] = useState(initialConfig === undefined);
   const [isSaving, setIsSaving] = useState(false);
-  const [config, setConfig] = useState<WhatsAppConfigPayload | null>(null);
-  const [templates, setTemplates] = useState<EditableTemplate[]>([]);
+  const [config, setConfig] = useState<WhatsAppConfigPayload | null>(initialConfig ?? null);
+  const [templates, setTemplates] = useState<EditableTemplate[]>(
+    initialConfig
+      ? initialConfig.templates.map((template) => ({
+          ...template,
+          bodyDraft: template.body,
+        }))
+      : [],
+  );
   const [openWaSessions, setOpenWaSessions] = useState<OpenWaSession[]>([]);
 
   const loadConfig = useCallback(async () => {
     setIsLoading(true);
 
     try {
-      const response = await fetch("/api/admin/whatsapp-config", { cache: "no-store" });
+      const response = await adminFetch("/api/admin/whatsapp-config", { cache: "no-store" });
       const payload = (await response.json()) as WhatsAppConfigPayload & { error?: string };
 
       if (!response.ok) {
@@ -44,8 +57,11 @@ export function WhatsAppNotificationsConfig() {
   }, []);
 
   useEffect(() => {
+    if (initialConfig !== undefined) {
+      return;
+    }
     void loadConfig();
-  }, [loadConfig]);
+  }, [initialConfig, loadConfig]);
 
   useEffect(() => {
     void listOpenWaSessions()
@@ -53,55 +69,52 @@ export function WhatsAppNotificationsConfig() {
       .catch(() => setOpenWaSessions([]));
   }, []);
 
-  async function handleSave() {
+  const savePayload = useMemo(() => {
+    if (!config) {
+      return "";
+    }
+
+    return JSON.stringify({
+      settings: {
+        activeSessionId: config.settings.activeSessionId,
+        sendOnWebsiteBooking: config.settings.sendOnWebsiteBooking,
+        sendOnBookingConfirmed: config.settings.sendOnBookingConfirmed,
+        sendBeforeCheckin: config.settings.sendBeforeCheckin,
+        hoursBeforeCheckin: config.settings.hoursBeforeCheckin,
+        sendAfterExperience: config.settings.sendAfterExperience,
+        hoursAfterCheckin: config.settings.hoursAfterCheckin,
+        maxSendAttempts: config.settings.maxSendAttempts,
+        defaultCountryCode: config.settings.defaultCountryCode,
+      },
+      templates: templates.map((template) => ({
+        templateKey: template.templateKey,
+        body: template.bodyDraft,
+        isEnabled: template.isEnabled,
+      })),
+    });
+  }, [config, templates]);
+
+  async function handleSave(event: React.FormEvent<HTMLFormElement>) {
     if (!config) {
       return;
     }
 
-    setIsSaving(true);
-
-    try {
-      const response = await fetch("/api/admin/whatsapp-config", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          settings: {
-            activeSessionId: config.settings.activeSessionId,
-            sendOnBookingConfirmed: config.settings.sendOnBookingConfirmed,
-            sendBeforeCheckin: config.settings.sendBeforeCheckin,
-            hoursBeforeCheckin: config.settings.hoursBeforeCheckin,
-            sendAfterExperience: config.settings.sendAfterExperience,
-            hoursAfterCheckin: config.settings.hoursAfterCheckin,
-            maxSendAttempts: config.settings.maxSendAttempts,
-            defaultCountryCode: config.settings.defaultCountryCode,
-          },
-          templates: templates.map((template) => ({
-            templateKey: template.templateKey,
-            body: template.bodyDraft,
-            isEnabled: template.isEnabled,
+    await submitAdminJsonForm<WhatsAppConfigPayload>(event, {
+      url: "/api/admin/whatsapp-config",
+      method: "PUT",
+      payload: savePayload,
+      setSaving: setIsSaving,
+      onSuccess: (payload) => {
+        setConfig(payload);
+        setTemplates(
+          payload.templates.map((template) => ({
+            ...template,
+            bodyDraft: template.body,
           })),
-        }),
-      });
-
-      const payload = (await response.json()) as WhatsAppConfigPayload & { error?: string };
-
-      if (!response.ok) {
-        throw new Error(payload.error ?? "No fue posible guardar.");
-      }
-
-      setConfig(payload);
-      setTemplates(
-        payload.templates.map((template) => ({
-          ...template,
-          bodyDraft: template.body,
-        })),
-      );
-      notify.success("Configuración de WhatsApp guardada en la base de datos.");
-    } catch (error) {
-      notify.error(error instanceof Error ? error.message : "Error al guardar.");
-    } finally {
-      setIsSaving(false);
-    }
+        );
+        notify.success("Configuración de WhatsApp guardada en la base de datos.");
+      },
+    });
   }
 
   if (isLoading) {
@@ -131,6 +144,8 @@ export function WhatsAppNotificationsConfig() {
   }
 
   return (
+    <form method="POST" action="/api/admin/whatsapp-config" onSubmit={(event) => void handleSave(event)}>
+    <input type="hidden" name="payload" value={savePayload} readOnly />
     <article className="rounded-[2rem] bg-white p-8 coastal-shadow">
       <div className="mb-6">
         <h2 className="text-[22px] font-semibold text-primary">Mensajes automáticos por WhatsApp</h2>
@@ -290,6 +305,21 @@ export function WhatsAppNotificationsConfig() {
         <label className="flex cursor-pointer items-center gap-3 rounded-2xl border border-outline-variant/20 bg-surface-container-low px-4 py-3">
           <input
             type="checkbox"
+            checked={config.settings.sendOnWebsiteBooking}
+            onChange={(event) =>
+              setConfig({
+                ...config,
+                settings: { ...config.settings, sendOnWebsiteBooking: event.target.checked },
+              })
+            }
+            className="h-4 w-4 accent-primary"
+          />
+          <span className="text-sm font-medium text-primary">Solicitud desde la web (gestión por WhatsApp)</span>
+        </label>
+
+        <label className="flex cursor-pointer items-center gap-3 rounded-2xl border border-outline-variant/20 bg-surface-container-low px-4 py-3">
+          <input
+            type="checkbox"
             checked={config.settings.sendOnBookingConfirmed}
             onChange={(event) =>
               setConfig({
@@ -381,8 +411,7 @@ export function WhatsAppNotificationsConfig() {
 
       <div className="mt-8 flex justify-end">
         <button
-          type="button"
-          onClick={() => void handleSave()}
+          type="submit"
           disabled={isSaving}
           className="rounded-2xl bg-primary px-6 py-3 text-sm font-semibold text-white coastal-shadow disabled:opacity-60"
         >
@@ -390,5 +419,6 @@ export function WhatsAppNotificationsConfig() {
         </button>
       </div>
     </article>
+    </form>
   );
 }

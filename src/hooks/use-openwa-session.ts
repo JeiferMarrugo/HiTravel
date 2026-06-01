@@ -9,20 +9,36 @@ const STORAGE_KEY = "openwa-active-session-id";
 
 type UseOpenWaSessionOptions = {
   fallbackSessionId?: string | null;
+  initialSessions?: OpenWaSession[];
 };
 
-function readInitialSessionId(fallbackSessionId?: string | null) {
+function readInitialSessionId(fallbackSessionId?: string | null, initialSessions: OpenWaSession[] = []) {
+  const configuredSessionId =
+    initialSessions.find((session) => session.id === fallbackSessionId)?.id ??
+    initialSessions.find((session) => session.status === "ready")?.id ??
+    initialSessions[0]?.id ??
+    fallbackSessionId ??
+    null;
+
   if (typeof window === "undefined") {
-    return fallbackSessionId ?? null;
+    return configuredSessionId;
   }
 
   const storedValue = window.localStorage.getItem(STORAGE_KEY);
-  return storedValue ?? fallbackSessionId ?? null;
+
+  if (storedValue && initialSessions.some((session) => session.id === storedValue)) {
+    return storedValue;
+  }
+
+  return storedValue ?? configuredSessionId;
 }
 
-export function useOpenWaSession({ fallbackSessionId }: UseOpenWaSessionOptions = {}) {
-  const [selectedSessionId, setSelectedSessionId] = useState<string | null>(() => readInitialSessionId(fallbackSessionId));
+export function useOpenWaSession({ fallbackSessionId, initialSessions = [] }: UseOpenWaSessionOptions = {}) {
+  const [selectedSessionId, setSelectedSessionId] = useState<string | null>(() =>
+    readInitialSessionId(fallbackSessionId, initialSessions),
+  );
   const sessionsState = useOpenWaPolling<OpenWaSession[]>(() => listOpenWaSessions(), {
+    initialData: initialSessions,
     intervalMs: 15000,
   });
 

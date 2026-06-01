@@ -1,5 +1,6 @@
 "use client";
 
+import { adminFetch } from "@/lib/admin/admin-fetch";
 import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useState } from "react";
@@ -7,7 +8,7 @@ import { StatCard } from "@/components/admin/stat-card";
 import { BookingStatusBadge } from "@/components/admin/booking-status-badge";
 import { DashboardChannelsChart, DashboardSalesChart, DashboardToursChart } from "@/components/admin/dashboard/dashboard-charts";
 import type { DashboardMetricsPayload } from "@/lib/admin/dashboard-metrics";
-import { formatCurrency, quickActions } from "@/lib/admin/dashboard-data";
+import { quickActions } from "@/lib/admin/dashboard-data";
 import { formatMoneyDisplay } from "@/lib/catalog/money";
 
 function formatTodayLabel() {
@@ -19,18 +20,23 @@ function formatTodayLabel() {
   }).format(new Date());
 }
 
-export function AdminDashboard() {
-  const [metrics, setMetrics] = useState<DashboardMetricsPayload | null>(null);
+export function AdminDashboard({ initialMetrics = null }: { initialMetrics?: DashboardMetricsPayload | null }) {
+  const [metrics, setMetrics] = useState<DashboardMetricsPayload | null>(initialMetrics);
 
   useEffect(() => {
-    void fetch("/api/admin/dashboard", { cache: "no-store" })
+    if (initialMetrics) {
+      return;
+    }
+
+    void adminFetch("/api/admin/dashboard", { cache: "no-store" })
       .then((response) => response.json())
       .then((payload: DashboardMetricsPayload) => setMetrics(payload))
       .catch(() => setMetrics(null));
-  }, []);
+  }, [initialMetrics]);
 
   const dashboardStats = metrics?.stats ?? [];
   const monthlySales = metrics?.monthlySales ?? [];
+  const salesGrowthLabel = metrics?.salesGrowthLabel;
   const bookingChannels = metrics?.bookingChannels ?? [];
   const tourRevenueMetrics = metrics?.tourRevenueMetrics ?? [];
   const topClients = metrics?.topClients ?? [];
@@ -76,7 +82,11 @@ export function AdminDashboard() {
               <h2 className="text-[22px] font-semibold text-primary">Ventas mensuales</h2>
               <p className="mt-1 text-sm text-on-surface-variant">Evolución de ingresos y reservas en los últimos 6 meses</p>
             </div>
-            <span className="rounded-full bg-green-50 px-3 py-1 text-xs font-semibold text-green-700">+18.4% vs mes anterior</span>
+            {salesGrowthLabel ? (
+              <span className="rounded-full bg-green-50 px-3 py-1 text-xs font-semibold text-green-700">
+                {salesGrowthLabel}
+              </span>
+            ) : null}
           </div>
           <DashboardSalesChart data={monthlySales} />
         </article>

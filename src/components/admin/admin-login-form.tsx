@@ -1,27 +1,63 @@
 "use client";
 
-import { useState } from "react";
+import { adminFetch } from "@/lib/admin/admin-fetch";
+import { useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { notify } from "@/lib/toast";
+
+function syncPasswordFieldType(toggle: HTMLInputElement, password: HTMLInputElement) {
+  password.type = toggle.checked ? "text" : "password";
+}
 
 export function AdminLoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
+  const passwordRef = useRef<HTMLInputElement>(null);
+  const showPasswordRef = useRef<HTMLInputElement>(null);
   const [rememberSession, setRememberSession] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const redirectTo =
+    searchParams.get("redirect") && searchParams.get("redirect")!.startsWith("/admin")
+      ? searchParams.get("redirect")!
+      : "/admin";
+
+  useEffect(() => {
+    const toggleEl = showPasswordRef.current;
+    const passwordEl = passwordRef.current;
+
+    if (!toggleEl || !passwordEl) {
+      return;
+    }
+
+    function handleToggle() {
+      syncPasswordFieldType(toggleEl!, passwordEl!);
+    }
+
+    toggleEl.addEventListener("change", handleToggle);
+    return () => toggleEl.removeEventListener("change", handleToggle);
+  }, []);
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setIsSubmitting(true);
 
+    const formData = new FormData(event.currentTarget);
+    const email = formData.get("email")?.toString().trim() ?? "";
+    const password = formData.get("password")?.toString() ?? "";
+
     try {
-      const response = await fetch("/api/auth/login", {
+      const response = await adminFetch("/api/auth/login", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password, remember: rememberSession }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email,
+          password,
+          remember: rememberSession,
+          redirect: redirectTo,
+        }),
       });
 
       const payload = (await response.json()) as { error?: string; message?: string };
@@ -32,19 +68,19 @@ export function AdminLoginForm() {
       }
 
       notify.success(payload.message ?? "Bienvenido al panel de administración.");
-
-      const redirectTo = searchParams.get("redirect");
-      router.push(redirectTo && redirectTo.startsWith("/admin") ? redirectTo : "/admin");
+      router.push(redirectTo);
       router.refresh();
     } catch {
-      notify.error("No fue posible conectar con el servidor.");
+      event.currentTarget.requestSubmit();
     } finally {
       setIsSubmitting(false);
     }
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6 text-left">
+    <form action="/api/auth/login" method="POST" onSubmit={handleSubmit} className="space-y-6 text-left">
+      <input type="hidden" name="redirect" value={redirectTo} />
+
       <div>
         <label htmlFor="admin-email" className="mb-2 block text-sm font-semibold text-on-surface-variant">
           Correo electrónico
@@ -53,11 +89,10 @@ export function AdminLoginForm() {
           <span className="material-symbols-outlined text-on-surface-variant">mail</span>
           <input
             id="admin-email"
+            name="email"
             type="email"
             autoComplete="username"
             required
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
             className="w-full bg-transparent outline-none"
             placeholder="admin@hitravel.com"
           />
@@ -74,25 +109,39 @@ export function AdminLoginForm() {
           </button>
         </div>
         <div className="flex items-center gap-3 rounded-xl border border-outline-variant/30 bg-surface-container px-4 py-3">
-          <span className="material-symbols-outlined text-on-surface-variant">lock</span>
+          <span className="material-symbols-outlined shrink-0 text-on-surface-variant">lock</span>
           <input
+            ref={showPasswordRef}
+            id="admin-show-password"
+            type="checkbox"
+            className="peer/show sr-only"
+            tabIndex={-1}
+            aria-hidden
+          />
+          <input
+            ref={passwordRef}
             id="admin-password"
-            type={showPassword ? "text" : "password"}
+            name="password"
+            type="password"
             autoComplete="current-password"
             required
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            className="w-full bg-transparent outline-none"
+            className="min-w-0 flex-1 bg-transparent outline-none"
             placeholder="••••••••"
           />
-          <button
-            type="button"
-            onClick={() => setShowPassword((current) => !current)}
-            className="text-on-surface-variant"
-            aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+          <label
+            htmlFor="admin-show-password"
+            className="shrink-0 cursor-pointer touch-manipulation text-on-surface-variant peer-checked/show:hidden"
+            aria-label="Mostrar contraseña"
           >
-            <span className="material-symbols-outlined">{showPassword ? "visibility_off" : "visibility"}</span>
-          </button>
+            <span className="material-symbols-outlined pointer-events-none">visibility</span>
+          </label>
+          <label
+            htmlFor="admin-show-password"
+            className="hidden shrink-0 cursor-pointer touch-manipulation text-on-surface-variant peer-checked/show:block"
+            aria-label="Ocultar contraseña"
+          >
+            <span className="material-symbols-outlined pointer-events-none">visibility_off</span>
+          </label>
         </div>
       </div>
 

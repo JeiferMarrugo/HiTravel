@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Sitio web de HI TRAVEL construido con Next.js.",
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --hostname 0.0.0.0",
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
@@ -25,12 +25,15 @@
     "dev:stack": "npm run docker:db && npm run dev",
     "docker:logs": "docker compose logs -f",
     "docker:ps": "docker compose ps",
-    "docker:openwa:clean-locks": "docker exec hitravel-openwa sh -c \"find /app/data/sessions \\\\( -name SingletonLock -o -name SingletonCookie -o -name SingletonSocket \\\\) -delete 2>/dev/null || true\""
+    "docker:openwa:clean-locks": "docker exec hitravel-openwa sh -c \"find /app/data/sessions \\\\( -name SingletonLock -o -name SingletonCookie -o -name SingletonSocket \\\\) -delete 2>/dev/null || true\"",
+    "tunnel": "ngrok http 3000",
+    "tunnel:url": "node scripts/ngrok-url.mjs"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@vercel/blob": "^2.4.0",
     "bcryptjs": "^3.0.3",
     "jose": "^6.2.3",
     "libphonenumber-js": "^1.13.4",

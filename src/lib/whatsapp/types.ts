@@ -1,10 +1,12 @@
 export type WhatsAppTemplateKey =
   | "booking_confirmed"
+  | "website_booking_received"
   | "checkin_reminder"
   | "post_experience_review";
 
 export type WhatsAppSettings = {
   activeSessionId: string | null;
+  sendOnWebsiteBooking: boolean;
   sendOnBookingConfirmed: boolean;
   sendBeforeCheckin: boolean;
   hoursBeforeCheckin: number;
@@ -33,6 +35,7 @@ export type WhatsAppConfigPayload = {
 export type UpdateWhatsAppConfigInput = {
   settings?: {
     activeSessionId?: string | null;
+    sendOnWebsiteBooking?: boolean;
     sendOnBookingConfirmed?: boolean;
     sendBeforeCheckin?: boolean;
     hoursBeforeCheckin?: number;

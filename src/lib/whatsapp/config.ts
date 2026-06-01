@@ -11,6 +11,7 @@ import { TEMPLATE_PLACEHOLDERS } from "@/lib/whatsapp/types";
 
 type SettingsRow = {
   active_session_id: string | null;
+  send_on_website_booking?: boolean;
   send_on_booking_confirmed: boolean;
   send_before_checkin: boolean;
   hours_before_checkin: number;
@@ -33,6 +34,7 @@ type TemplateRow = {
 function mapSettings(row: SettingsRow): WhatsAppSettings {
   return {
     activeSessionId: row.active_session_id,
+    sendOnWebsiteBooking: row.send_on_website_booking ?? true,
     sendOnBookingConfirmed: row.send_on_booking_confirmed,
     sendBeforeCheckin: row.send_before_checkin,
     hoursBeforeCheckin: row.hours_before_checkin,
@@ -80,6 +82,7 @@ export async function updateWhatsAppConfig(input: UpdateWhatsAppConfigInput): Pr
   if (input.settings) {
     const {
       activeSessionId,
+      sendOnWebsiteBooking,
       sendOnBookingConfirmed,
       sendBeforeCheckin,
       hoursBeforeCheckin,
@@ -111,6 +114,11 @@ export async function updateWhatsAppConfig(input: UpdateWhatsAppConfigInput): Pr
     if (activeSessionId !== undefined) {
       fields.push(`active_session_id = $${fields.length + 1}`);
       values.push(activeSessionId);
+    }
+
+    if (sendOnWebsiteBooking !== undefined) {
+      fields.push(`send_on_website_booking = $${fields.length + 1}`);
+      values.push(sendOnWebsiteBooking);
     }
 
     if (sendOnBookingConfirmed !== undefined) {

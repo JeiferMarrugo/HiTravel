@@ -1,6 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { adminFetch } from "@/lib/admin/admin-fetch";
+import { submitAdminJsonForm } from "@/lib/admin/submit-admin-json-form";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   DEFAULT_PROMOTION_CONFIG,
   PROMOTION_TYPE_OPTIONS,
@@ -187,20 +189,44 @@ function ConfigFields({
   }
 }
 
-export function PromotionsManager() {
-  const [promotions, setPromotions] = useState<PromotionRecord[]>([]);
-  const [tours, setTours] = useState<TourListItem[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+export function PromotionsManager({
+  initialPromotions,
+  initialTours,
+}: {
+  initialPromotions?: PromotionRecord[];
+  initialTours?: TourListItem[];
+}) {
+  const [promotions, setPromotions] = useState<PromotionRecord[]>(initialPromotions ?? []);
+  const [tours, setTours] = useState<TourListItem[]>(initialTours ?? []);
+  const [isLoading, setIsLoading] = useState(initialPromotions === undefined);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState(emptyForm);
+  const [isSaving, setIsSaving] = useState(false);
+
+  const saveAction = editingId ? `/api/admin/promotions/${editingId}` : "/api/admin/promotions";
+  const savePayload = useMemo(
+    () =>
+      JSON.stringify({
+        name: form.name,
+        description: form.description,
+        promotionType: form.promotionType,
+        config: form.config,
+        tourIds: form.allTours ? null : form.tourIds,
+        validFrom: form.validFrom || null,
+        validUntil: form.validUntil || null,
+        isActive: form.isActive,
+        sortOrder: Number(form.sortOrder) || 0,
+      }),
+    [form],
+  );
 
   const load = useCallback(async () => {
     setIsLoading(true);
     try {
       const [promoRes, toursRes] = await Promise.all([
-        fetch("/api/admin/promotions"),
-        fetch("/api/admin/tours"),
+        adminFetch("/api/admin/promotions"),
+        adminFetch("/api/admin/tours"),
       ]);
       const promoData = (await promoRes.json()) as { promotions: PromotionRecord[]; error?: string };
       const toursData = (await toursRes.json()) as { tours: TourListItem[] };
@@ -217,8 +243,11 @@ export function PromotionsManager() {
   }, []);
 
   useEffect(() => {
+    if (initialPromotions !== undefined) {
+      return;
+    }
     void load();
-  }, [load]);
+  }, [initialPromotions, load]);
 
   function openCreate() {
     setEditingId(null);
@@ -251,46 +280,25 @@ export function PromotionsManager() {
     });
   }
 
-  async function handleSubmit(event: React.FormEvent) {
-    event.preventDefault();
-    try {
-      const payload = {
-        name: form.name,
-        description: form.description,
-        promotionType: form.promotionType,
-        config: form.config,
-        tourIds: form.allTours ? null : form.tourIds,
-        validFrom: form.validFrom || null,
-        validUntil: form.validUntil || null,
-        isActive: form.isActive,
-        sortOrder: Number(form.sortOrder) || 0,
-      };
-
-      const response = await fetch(
-        editingId ? `/api/admin/promotions/${editingId}` : "/api/admin/promotions",
-        {
-          method: editingId ? "PUT" : "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        },
-      );
-      const data = (await response.json()) as { error?: string };
-      if (!response.ok) {
-        throw new Error(data.error ?? "Error al guardar.");
-      }
-      notify.success(editingId ? "Promoción actualizada." : "Promoción creada.");
-      setShowForm(false);
-      setEditingId(null);
-      setForm(emptyForm());
-      await load();
-    } catch (error) {
-      notify.error(error instanceof Error ? error.message : "Error al guardar.");
-    }
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    await submitAdminJsonForm(event, {
+      url: saveAction,
+      method: editingId ? "PUT" : "POST",
+      payload: savePayload,
+      setSaving: setIsSaving,
+      onSuccess: async () => {
+        notify.success(editingId ? "Promoción actualizada." : "Promoción creada.");
+        setShowForm(false);
+        setEditingId(null);
+        setForm(emptyForm());
+        await load();
+      },
+    });
   }
 
   async function toggleActive(promo: PromotionRecord) {
     try {
-      const response = await fetch(`/api/admin/promotions/${promo.id}`, {
+      const response = await adminFetch(`/api/admin/promotions/${promo.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ isActive: !promo.isActive }),
@@ -310,7 +318,7 @@ export function PromotionsManager() {
       return;
     }
     try {
-      const response = await fetch(`/api/admin/promotions/${id}`, { method: "DELETE" });
+      const response = await adminFetch(`/api/admin/promotions/${id}`, { method: "DELETE" });
       const data = (await response.json()) as { error?: string };
       if (!response.ok) {
         throw new Error(data.error ?? "Error al eliminar.");
@@ -338,7 +346,13 @@ export function PromotionsManager() {
       </div>
 
       {showForm ? (
-        <form onSubmit={handleSubmit} className="rounded-[2rem] bg-white p-6 coastal-shadow space-y-4">
+        <form
+          method="POST"
+          action={saveAction}
+          onSubmit={(event) => void handleSubmit(event)}
+          className="rounded-[2rem] bg-white p-6 coastal-shadow space-y-4"
+        >
+          <input type="hidden" name="payload" value={savePayload} readOnly />
           <h2 className="text-lg font-semibold text-primary">
             {editingId ? "Editar promoción" : "Nueva promoción"}
           </h2>
@@ -458,8 +472,12 @@ export function PromotionsManager() {
           </label>
 
           <div className="flex gap-3">
-            <button type="submit" className="rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-white">
-              Guardar
+            <button
+              type="submit"
+              disabled={isSaving}
+              className="rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-white disabled:opacity-60"
+            >
+              {isSaving ? "Guardando..." : "Guardar"}
             </button>
             <button
               type="button"

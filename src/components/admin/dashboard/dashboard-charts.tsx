@@ -15,7 +15,7 @@ import {
   YAxis,
 } from "recharts";
 import type { BookingChannelMetric, SalesDataPoint, TourRevenueMetric } from "@/lib/admin/types";
-import { formatCurrency } from "@/lib/admin/dashboard-data";
+import { formatMoneyDisplay } from "@/lib/catalog/money";
 
 const CHART_PRIMARY = "#001e40";
 const CHART_ACCENT = "#fecb00";
@@ -41,7 +41,15 @@ export function DashboardSalesChart({ data }: DashboardSalesChartProps) {
           tick={{ fill: "#43474f", fontSize: 12 }}
           axisLine={false}
           tickLine={false}
-          tickFormatter={(value: number) => `$${Math.round(value / 1000)}k`}
+          tickFormatter={(value: number) => {
+            if (value >= 1_000_000) {
+              return `$${Math.round(value / 1_000_000)}M`;
+            }
+            if (value >= 1_000) {
+              return `$${Math.round(value / 1_000)}k`;
+            }
+            return `$${value}`;
+          }}
         />
         <Tooltip
           contentStyle={{
@@ -52,7 +60,7 @@ export function DashboardSalesChart({ data }: DashboardSalesChartProps) {
           formatter={(value, name) => {
             const numericValue = typeof value === "number" ? value : Number(value ?? 0);
             if (name === "sales") {
-              return [formatCurrency(numericValue), "Ventas"];
+              return [formatMoneyDisplay(numericValue, "COP"), "Ventas"];
             }
             return [numericValue, "Reservas"];
           }}
@@ -84,7 +92,15 @@ export function DashboardToursChart({ data }: DashboardToursChartProps) {
           tick={{ fill: "#43474f", fontSize: 12 }}
           axisLine={false}
           tickLine={false}
-          tickFormatter={(value: number) => `$${Math.round(value / 1000)}k`}
+          tickFormatter={(value: number) => {
+            if (value >= 1_000_000) {
+              return `$${Math.round(value / 1_000_000)}M`;
+            }
+            if (value >= 1_000) {
+              return `$${Math.round(value / 1_000)}k`;
+            }
+            return `$${value}`;
+          }}
         />
         <YAxis
           type="category"
@@ -100,7 +116,10 @@ export function DashboardToursChart({ data }: DashboardToursChartProps) {
             border: "1px solid #e0e3e5",
             boxShadow: "0 10px 30px -5px rgba(0, 51, 102, 0.08)",
           }}
-          formatter={(value) => [formatCurrency(typeof value === "number" ? value : Number(value ?? 0)), "Ingresos"]}
+          formatter={(value) => [
+            formatMoneyDisplay(typeof value === "number" ? value : Number(value ?? 0), "COP"),
+            "Ingresos",
+          ]}
         />
         <Bar dataKey="revenue" fill={CHART_ACCENT} radius={[0, 10, 10, 0]} barSize={18} />
       </BarChart>

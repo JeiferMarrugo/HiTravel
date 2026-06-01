@@ -1,6 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { adminFetch } from "@/lib/admin/admin-fetch";
+import { submitAdminJsonForm } from "@/lib/admin/submit-admin-json-form";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { notify } from "@/lib/toast";
 
@@ -23,7 +25,7 @@ export function AdminProfileForm() {
   useEffect(() => {
     async function loadProfile() {
       try {
-        const response = await fetch("/api/auth/profile");
+        const response = await adminFetch("/api/auth/profile");
         const payload = (await response.json()) as { user?: ProfileUser; error?: string };
 
         if (!response.ok || !payload.user) {
@@ -42,41 +44,34 @@ export function AdminProfileForm() {
     void loadProfile();
   }, []);
 
+  const savePayload = useMemo(
+    () =>
+      JSON.stringify({
+        fullName,
+        currentPassword: currentPassword || undefined,
+        newPassword: newPassword || undefined,
+      }),
+    [fullName, currentPassword, newPassword],
+  );
+
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setIsSaving(true);
+    await submitAdminJsonForm<{ error?: string; message?: string; user?: ProfileUser }>(event, {
+      url: "/api/auth/profile",
+      method: "POST",
+      payload: savePayload,
+      setSaving: setIsSaving,
+      onSuccess: (payload) => {
+        if (payload.user) {
+          setUser(payload.user);
+          setFullName(payload.user.name);
+        }
 
-    try {
-      const response = await fetch("/api/auth/profile", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          fullName,
-          currentPassword: currentPassword || undefined,
-          newPassword: newPassword || undefined,
-        }),
-      });
-
-      const payload = (await response.json()) as { error?: string; message?: string; user?: ProfileUser };
-
-      if (!response.ok) {
-        throw new Error(payload.error ?? "No fue posible guardar los cambios.");
-      }
-
-      if (payload.user) {
-        setUser(payload.user);
-        setFullName(payload.user.name);
-      }
-
-      setCurrentPassword("");
-      setNewPassword("");
-      notify.success(payload.message ?? "Perfil actualizado correctamente.");
-      router.refresh();
-    } catch (error) {
-      notify.error(error instanceof Error ? error.message : "No fue posible guardar los cambios.");
-    } finally {
-      setIsSaving(false);
-    }
+        setCurrentPassword("");
+        setNewPassword("");
+        notify.success(payload.message ?? "Perfil actualizado correctamente.");
+        router.refresh();
+      },
+    });
   }
 
   if (isLoading) {
@@ -84,7 +79,13 @@ export function AdminProfileForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="rounded-[2rem] bg-white p-8 coastal-shadow">
+    <form
+      method="POST"
+      action="/api/auth/profile"
+      onSubmit={(event) => void handleSubmit(event)}
+      className="rounded-[2rem] bg-white p-8 coastal-shadow"
+    >
+      <input type="hidden" name="payload" value={savePayload} readOnly />
       <div className="mb-8">
         <h1 className="text-3xl font-extrabold text-primary">Mi perfil</h1>
         <p className="mt-2 text-sm text-on-surface-variant">Actualiza tu nombre y contraseña de acceso al panel.</p>

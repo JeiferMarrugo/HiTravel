@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ChatList } from "@/components/admin/whatsapp/chat-list";
 import { ChatThread } from "@/components/admin/whatsapp/chat-thread";
@@ -18,6 +19,7 @@ import type {
   OpenWaMessage,
   OpenWaMessageStats,
   OpenWaOverviewStats,
+  OpenWaSession,
   OpenWaSessionStats,
 } from "@/lib/admin/types";
 import { syncActiveSessionToServer } from "@/lib/whatsapp/sync-active-session-client";
@@ -55,9 +57,13 @@ import {
 
 type AdminWhatsAppHubProps = {
   fallbackSessionId?: string | null;
+  initialSessions?: OpenWaSession[];
+  initialTab?: AdminWhatsAppHubTab;
 };
 
-type HubTab = "inbox" | "sessions" | "groups" | "contacts" | "webhooks" | "stats";
+export type AdminWhatsAppHubTab = "inbox" | "sessions" | "groups" | "contacts" | "webhooks" | "stats";
+
+type HubTab = AdminWhatsAppHubTab;
 
 const tabs: Array<{ id: HubTab; label: string; icon: string }> = [
   { id: "inbox", label: "Inbox", icon: "forum" },
@@ -109,13 +115,18 @@ function buildChats(messages: OpenWaMessage[], contacts: OpenWaContact[], groups
   return Array.from(chatMap.values()).sort((firstChat, secondChat) => (secondChat.lastTimestamp ?? 0) - (firstChat.lastTimestamp ?? 0));
 }
 
-export function AdminWhatsAppHub({ fallbackSessionId }: AdminWhatsAppHubProps) {
-  const [activeTab, setActiveTab] = useState<HubTab>("inbox");
+export function AdminWhatsAppHub({
+  fallbackSessionId,
+  initialSessions = [],
+  initialTab = "inbox",
+}: AdminWhatsAppHubProps) {
+  const activeTab = initialTab;
   const [selectedChatId, setSelectedChatId] = useState<string | null>(null);
   const [replyingToMessage, setReplyingToMessage] = useState<OpenWaMessage | null>(null);
 
-  const { isLoading: sessionsLoading, refreshSessions, selectedSession, selectedSessionId, sessions, setSelectedSessionId } = useOpenWaSession({
+  const { error: sessionsError, isLoading: sessionsLoading, refreshSessions, selectedSession, selectedSessionId, sessions, setSelectedSessionId } = useOpenWaSession({
     fallbackSessionId,
+    initialSessions,
   });
 
   useEffect(() => {
@@ -452,19 +463,24 @@ export function AdminWhatsAppHub({ fallbackSessionId }: AdminWhatsAppHubProps) {
         </div>
       </section>
 
+      {sessionsError ? (
+        <div className="rounded-[1.5rem] border border-red-200 bg-red-50 px-5 py-4 text-sm text-red-800">
+          No fue posible conectar con OpenWA: {sessionsError}. Comprueba que Docker esté activo (`npm run docker:db`) y reinicia `npm run dev` tras cambiar `.env.local`.
+        </div>
+      ) : null}
+
       <section className="flex flex-wrap gap-3">
         {tabs.map((tab) => (
-          <button
+          <Link
             key={tab.id}
-            type="button"
-            onClick={() => setActiveTab(tab.id)}
+            href={`/admin/whatsapp?tab=${tab.id}`}
             className={`inline-flex items-center gap-2 rounded-full px-4 py-3 text-sm font-semibold transition ${
               activeTab === tab.id ? "bg-primary text-white" : "bg-white text-primary coastal-shadow"
             }`}
           >
             <span className="material-symbols-outlined text-[18px]">{tab.icon}</span>
             {tab.label}
-          </button>
+          </Link>
         ))}
       </section>
 

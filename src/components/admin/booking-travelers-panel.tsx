@@ -1,7 +1,9 @@
 "use client";
 
+import { adminFetch } from "@/lib/admin/admin-fetch";
+import { submitAdminJsonForm } from "@/lib/admin/submit-admin-json-form";
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { PhoneField } from "@/components/phone-input";
 import type { BookingGuestRecord, BookingRecord } from "@/lib/catalog/types";
 import type { CatalogIdType } from "@/lib/catalog/id-types";
@@ -36,8 +38,8 @@ export function BookingTravelersPanel({ bookingId }: BookingTravelersPanelProps)
     setIsLoading(true);
     try {
       const [guestsRes, idTypesRes] = await Promise.all([
-        fetch(`/api/admin/bookings/${bookingId}/guests`, { cache: "no-store" }),
-        fetch("/api/admin/id-types"),
+        adminFetch(`/api/admin/bookings/${bookingId}/guests`, { cache: "no-store" }),
+        adminFetch("/api/admin/id-types"),
       ]);
       const guestsPayload = (await guestsRes.json()) as {
         booking?: BookingRecord;
@@ -88,35 +90,33 @@ export function BookingTravelersPanel({ bookingId }: BookingTravelersPanelProps)
     ]);
   }
 
-  async function handleSave() {
-    setIsSaving(true);
-    try {
-      const response = await fetch(`/api/admin/bookings/${bookingId}/guests`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          booking: {
-            customerName,
-            customerCity,
-            customerPhone,
-            customerEmail,
-            customerIdTypeId,
-            customerIdNumber,
-          },
-          guests,
-        }),
-      });
-      const payload = (await response.json()) as { error?: string };
-      if (!response.ok) {
-        throw new Error(payload.error ?? "No se pudo guardar.");
-      }
-      notify.success("Datos de viajeros guardados.");
-      await load();
-    } catch (error) {
-      notify.error(error instanceof Error ? error.message : "Error al guardar.");
-    } finally {
-      setIsSaving(false);
-    }
+  const savePayload = useMemo(
+    () =>
+      JSON.stringify({
+        booking: {
+          customerName,
+          customerCity,
+          customerPhone,
+          customerEmail,
+          customerIdTypeId,
+          customerIdNumber,
+        },
+        guests,
+      }),
+    [customerName, customerCity, customerPhone, customerEmail, customerIdTypeId, customerIdNumber, guests],
+  );
+
+  async function handleSave(event: React.FormEvent<HTMLFormElement>) {
+    await submitAdminJsonForm(event, {
+      url: `/api/admin/bookings/${bookingId}/guests`,
+      method: "PUT",
+      payload: savePayload,
+      setSaving: setIsSaving,
+      onSuccess: async () => {
+        notify.success("Datos de viajeros guardados.");
+        await load();
+      },
+    });
   }
 
   async function toggleAttended() {
@@ -125,7 +125,7 @@ export function BookingTravelersPanel({ bookingId }: BookingTravelersPanelProps)
     }
     const attended = !booking.customerAttendedAt;
     try {
-      const response = await fetch(`/api/admin/bookings/${bookingId}/attended`, {
+      const response = await adminFetch(`/api/admin/bookings/${bookingId}/attended`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ attended }),
@@ -177,6 +177,12 @@ export function BookingTravelersPanel({ bookingId }: BookingTravelersPanelProps)
         </button>
       </div>
 
+      <form
+        method="POST"
+        action={`/api/admin/bookings/${bookingId}/guests`}
+        onSubmit={(event) => void handleSave(event)}
+      >
+      <input type="hidden" name="payload" value={savePayload} readOnly />
       <article className="rounded-[2rem] bg-white p-6 coastal-shadow">
         <h1 className="text-xl font-bold text-primary">
           {booking.bookingCode} · {booking.tourName}
@@ -297,14 +303,14 @@ export function BookingTravelersPanel({ bookingId }: BookingTravelersPanelProps)
         </div>
 
         <button
-          type="button"
+          type="submit"
           disabled={isSaving}
-          onClick={() => void handleSave()}
           className="mt-6 rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-white disabled:opacity-60"
         >
           {isSaving ? "Guardando..." : "Guardar datos de viajeros"}
         </button>
       </article>
+      </form>
     </div>
   );
 }

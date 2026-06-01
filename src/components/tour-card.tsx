@@ -34,21 +34,23 @@ export function TourCard({ tour, displayCurrency, usdCopRate }: TourCardProps) {
         ) : null}
       </div>
 
-      <div className="p-6">
+      <div className="p-4 sm:p-6">
         <div>
-          <h3 className="mb-2 text-[22px] font-semibold text-primary">{tour.name}</h3>
-          <p className="mb-6 line-clamp-2 text-base leading-6 text-on-surface-variant">{tour.description}</p>
+          <h3 className="mb-2 text-lg font-semibold text-primary sm:text-[22px]">{tour.name}</h3>
+          <p className="mb-4 line-clamp-2 text-sm leading-6 text-on-surface-variant sm:mb-6 sm:text-base">
+            {tour.description}
+          </p>
         </div>
 
-        <div className="mb-6 flex items-center justify-between text-sm text-on-surface-variant">
-          <div className="flex gap-4">
+        <div className="mb-4 flex flex-wrap items-center gap-3 text-sm text-on-surface-variant sm:mb-6 sm:justify-between">
+          <div className="flex flex-wrap gap-3 sm:gap-4">
             <div className="flex items-center gap-2">
               <span className="material-symbols-outlined text-primary">schedule</span>
               <span>{tour.duration}</span>
             </div>
             <div className="flex items-center gap-2">
               <span className="material-symbols-outlined text-primary">star</span>
-              <span>
+              <span className="text-xs sm:text-sm">
                 {tour.rating.toFixed(1)} ({tour.reviews} reseñas)
               </span>
             </div>
@@ -57,7 +59,7 @@ export function TourCard({ tour, displayCurrency, usdCopRate }: TourCardProps) {
 
         <Link
           href={`/tours/${tour.slug}`}
-          className="block w-full rounded-lg border-2 border-primary-container py-4 text-center text-sm font-semibold text-primary-container transition-all hover:bg-primary-container hover:text-white"
+          className="block min-h-[44px] w-full rounded-lg border-2 border-primary-container py-3.5 text-center text-sm font-semibold text-primary-container transition-all hover:bg-primary-container hover:text-white sm:py-4"
         >
           Ver más
         </Link>

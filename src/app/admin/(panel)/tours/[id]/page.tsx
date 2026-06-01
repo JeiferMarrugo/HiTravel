@@ -1,4 +1,9 @@
+import { notFound } from "next/navigation";
 import { TourEditor } from "@/components/admin/tour-editor";
+import { getActiveCatalogOptions } from "@/lib/catalog/catalog-options";
+import { getTourById } from "@/lib/catalog/tours";
+
+export const dynamic = "force-dynamic";
 
 type AdminTourEditPageProps = {
   params: Promise<{ id: string }>;
@@ -7,6 +12,14 @@ type AdminTourEditPageProps = {
 export default async function AdminTourEditPage({ params }: AdminTourEditPageProps) {
   const { id } = await params;
   const isNew = id === "nuevo";
+  const [catalog, tour] = await Promise.all([
+    getActiveCatalogOptions(),
+    isNew ? Promise.resolve(null) : getTourById(id),
+  ]);
+
+  if (!isNew && !tour) {
+    notFound();
+  }
 
   return (
     <div className="w-full">
@@ -18,7 +31,12 @@ export default async function AdminTourEditPage({ params }: AdminTourEditPagePro
           Configura nombre, tipo, descripciones, imágenes, itinerario, inclusiones y precios.
         </p>
       </section>
-      <TourEditor tourId={isNew ? undefined : id} isNew={isNew} />
+      <TourEditor
+        tourId={isNew ? undefined : id}
+        isNew={isNew}
+        initialCatalog={catalog}
+        initialTour={tour ?? undefined}
+      />
     </div>
   );
 }

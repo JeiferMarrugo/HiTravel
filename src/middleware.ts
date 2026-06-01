@@ -69,21 +69,21 @@ export async function middleware(request: NextRequest) {
   if (!session || isSessionExpired(session)) {
     if (isProtectedApiPath(pathname)) {
       const response = NextResponse.json({ error: "Sesión expirada." }, { status: 401 });
-      clearSessionCookieOnResponse(response);
+      clearSessionCookieOnResponse(response, request);
       return response;
     }
 
     const loginUrl = new URL("/admin/login", request.url);
     loginUrl.searchParams.set("expired", "1");
     const response = NextResponse.redirect(loginUrl);
-    clearSessionCookieOnResponse(response);
+    clearSessionCookieOnResponse(response, request);
     return response;
   }
 
   if (isProtectedAdminPath(pathname)) {
     const response = NextResponse.next();
     const refreshedToken = await refreshSessionToken(session);
-    await setSessionCookieOnResponse(response, refreshedToken);
+    await setSessionCookieOnResponse(response, refreshedToken, request);
     return response;
   }
 

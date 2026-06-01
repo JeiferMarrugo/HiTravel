@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+import { readAdminFormBody } from "@/lib/admin/read-admin-form-body";
+import { respondAdminFormSave } from "@/lib/admin/respond-admin-form-save";
 import { isSessionError, requireAdminSession } from "@/lib/auth/require-session";
 import {
   createCountry,
@@ -32,7 +34,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    const body = (await request.json()) as Record<string, unknown>;
+    const { body, prefersJson } = await readAdminFormBody<Record<string, unknown>>(request);
     const kind = body.kind;
 
     if (kind === "currency") {
@@ -43,26 +45,26 @@ export async function POST(request: Request) {
           ? Number(body.copExchangeRate)
           : undefined;
       await createCurrency(code, name, copExchangeRate);
-      return NextResponse.json(await getCatalogOptions());
+      return respondAdminFormSave(request, "/admin/configuracion?saved=catalog", await getCatalogOptions(), prefersJson);
     }
 
     if (kind === "currency-rate") {
       const code = typeof body.code === "string" ? body.code : "USD";
       const copExchangeRate = Number(body.copExchangeRate);
       await updateCurrencyExchangeRate(code, copExchangeRate);
-      return NextResponse.json(await getCatalogOptions());
+      return respondAdminFormSave(request, "/admin/configuracion?saved=catalog", await getCatalogOptions(), prefersJson);
     }
 
     if (kind === "country") {
       const name = typeof body.name === "string" ? body.name : "";
       await createCountry(name);
-      return NextResponse.json(await getCatalogOptions());
+      return respondAdminFormSave(request, "/admin/configuracion?saved=catalog", await getCatalogOptions(), prefersJson);
     }
 
     if (kind === "category") {
       const name = typeof body.name === "string" ? body.name : "";
       await createTourCategory(name);
-      return NextResponse.json(await getCatalogOptions());
+      return respondAdminFormSave(request, "/admin/configuracion?saved=catalog", await getCatalogOptions(), prefersJson);
     }
 
     if (kind === "delete") {
@@ -79,7 +81,7 @@ export async function POST(request: Request) {
         throw new Error("Solicitud de eliminación no válida.");
       }
 
-      return NextResponse.json(await getCatalogOptions());
+      return respondAdminFormSave(request, "/admin/configuracion?saved=catalog", await getCatalogOptions(), prefersJson);
     }
 
     throw new Error("Tipo de operación no válido.");

@@ -1,10 +1,13 @@
 import { NextResponse } from "next/server";
+import { readAdminFormBody } from "@/lib/admin/read-admin-form-body";
+import { respondAdminFormSave } from "@/lib/admin/respond-admin-form-save";
 import { isSessionError, requireAdminSession } from "@/lib/auth/require-session";
 import { getWhatsAppConfig, updateWhatsAppConfig } from "@/lib/whatsapp/config";
 import type { UpdateWhatsAppConfigInput, WhatsAppTemplateKey } from "@/lib/whatsapp/types";
 
 const VALID_TEMPLATE_KEYS = new Set<WhatsAppTemplateKey>([
   "booking_confirmed",
+  "website_booking_received",
   "checkin_reminder",
   "post_experience_review",
 ]);
@@ -26,6 +29,8 @@ function parseUpdateBody(body: unknown): UpdateWhatsAppConfigInput {
           : typeof settings.activeSessionId === "string"
             ? settings.activeSessionId.trim() || null
             : undefined,
+      sendOnWebsiteBooking:
+        typeof settings.sendOnWebsiteBooking === "boolean" ? settings.sendOnWebsiteBooking : undefined,
       sendOnBookingConfirmed:
         typeof settings.sendOnBookingConfirmed === "boolean"
           ? settings.sendOnBookingConfirmed
@@ -97,12 +102,16 @@ export async function PUT(request: Request) {
   }
 
   try {
-    const body = parseUpdateBody(await request.json());
-    const config = await updateWhatsAppConfig(body);
-    return NextResponse.json(config);
+    const { body, prefersJson } = await readAdminFormBody(request);
+    const config = await updateWhatsAppConfig(parseUpdateBody(body));
+    return respondAdminFormSave(request, "/admin/configuracion?saved=whatsapp", config, prefersJson);
   } catch (error) {
     const message = error instanceof Error ? error.message : "No fue posible guardar la configuración.";
     const status = message.includes("inválid") || message.includes("deben") ? 400 : 500;
     return NextResponse.json({ error: message }, { status });
   }
+}
+
+export async function POST(request: Request) {
+  return PUT(request);
 }

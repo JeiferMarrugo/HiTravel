@@ -12,7 +12,13 @@ export function useAdminLogout() {
     setIsLoggingOut(true);
 
     try {
-      const response = await fetch("/api/auth/logout", { method: "POST" });
+      const response = await fetch("/api/auth/logout", {
+        method: "POST",
+        headers: {
+          "ngrok-skip-browser-warning": "true",
+        },
+        credentials: "include",
+      });
       const payload = (await response.json()) as { message?: string; error?: string };
 
       if (!response.ok) {

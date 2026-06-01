@@ -1,10 +1,10 @@
 import Image from "next/image";
 import Link from "next/link";
-import { CurrencySwitcher } from "@/components/currency-switcher";
+import { BrandLogo } from "@/components/brand-logo";
+import { TopNavBar } from "@/components/top-nav-bar";
 import devLogo from "@/public/images/logo_dev.jpeg";
 import type { DisplayCurrency } from "@/lib/pricing/visitor-currency";
 import type { SiteContent } from "@/lib/site-content/types";
-import { isUploadedSiteImage } from "@/lib/site-content/utils";
 
 type ActiveNav = "tours" | "about" | "contact";
 
@@ -13,13 +13,6 @@ type SiteChromeProps = {
   active: ActiveNav;
   displayCurrency?: DisplayCurrency;
 };
-
-const navItems = [
-  { key: "tours", label: "Tours", href: "/tours" },
-  { key: "day-trips", label: "Pasadías", href: "/tours" },
-  { key: "about", label: "Sobre nosotros", href: "/nosotros" },
-  { key: "contact", label: "Contacto", href: "/contacto" },
-] as const;
 
 function DeveloperCreditFooter() {
   return (
@@ -41,49 +34,18 @@ function DeveloperCreditFooter() {
 }
 
 export function TopNav({ content, active, displayCurrency = "COP" }: SiteChromeProps) {
-  return (
-    <header className="fixed top-0 left-0 z-50 w-full bg-surface/80 backdrop-blur-xl shadow-sm shadow-primary/5">
-      <nav className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-4 md:px-16">
-        <Link href="/" className="flex items-center gap-3">
-          <span className="text-[22px] font-semibold tracking-tight text-primary">{content.brand.name}</span>
-        </Link>
-
-        <CurrencySwitcher initialCurrency={displayCurrency} />
-
-        <div className="hidden items-center gap-8 md:flex">
-          {navItems.map((item) => {
-            const isActive = item.key === active;
-            const className = isActive
-              ? "border-b-2 border-secondary font-bold text-primary"
-              : "text-on-surface-variant hover:text-primary";
-
-            return (
-              <Link key={item.key} href={item.href} className={`text-base transition-colors ${className}`}>
-                {item.label}
-              </Link>
-            );
-          })}
-        </div>
-
-        <Link
-          href="/contacto"
-          className="rounded-full bg-primary px-6 py-2 text-sm font-semibold text-on-primary transition-transform active:scale-95"
-        >
-          {content.brand.navCtaLabel}
-        </Link>
-      </nav>
-    </header>
-  );
+  return <TopNavBar content={content} active={active} displayCurrency={displayCurrency} />;
 }
 
 export function WhatsappFab({ content }: { content: SiteContent }) {
   return (
     <a
       href={content.contact.whatsappUrl}
-      className="fixed bottom-8 right-8 z-40 flex h-16 w-16 items-center justify-center rounded-full bg-secondary-container text-on-secondary-container shadow-2xl transition-transform hover:scale-110"
+      className="fixed bottom-5 right-4 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-secondary-container text-on-secondary-container shadow-2xl transition-transform hover:scale-110 sm:bottom-8 sm:right-8 sm:h-16 sm:w-16"
+      style={{ marginBottom: "env(safe-area-inset-bottom, 0px)" }}
       aria-label="WhatsApp"
     >
-      <span className="material-symbols-outlined text-4xl">chat</span>
+      <span className="material-symbols-outlined text-3xl sm:text-4xl">chat</span>
     </a>
   );
 }
@@ -95,19 +57,14 @@ export function HomeFooter({ content }: { content: SiteContent }) {
       <footer className="w-full border-t border-outline-variant/20 bg-primary px-4 py-20 md:px-16">
         <div className="mx-auto flex max-w-7xl flex-col justify-between gap-10 md:flex-row">
           <div className="max-w-sm space-y-6">
-            <div className="flex items-center gap-2">
-              {brand.logoUrl ? (
-                <Image
-                  src={brand.logoUrl}
-                  alt={brand.name}
-                  width={40}
-                  height={40}
-                  className="h-10 w-10 brightness-0 invert"
-                  unoptimized={isUploadedSiteImage(brand.logoUrl)}
-                />
-              ) : null}
-              <span className="text-3xl font-bold text-secondary-container">{brand.name}</span>
-            </div>
+            <BrandLogo
+              name={brand.name}
+              logoUrl={brand.logoUrl}
+              variant="on-dark"
+              className="h-14 w-auto max-w-[200px]"
+              width={200}
+              height={80}
+            />
             <p className="text-sm leading-7 text-white/80">{footer.homeDescription}</p>
             <div className="flex gap-4">
               <a className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 transition-colors hover:bg-secondary-container" href={social.instagram}>

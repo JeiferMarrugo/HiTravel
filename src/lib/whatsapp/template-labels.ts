@@ -6,6 +6,11 @@ export const WHATSAPP_TEMPLATE_OPTIONS: Array<{
   description: string;
 }> = [
   {
+    key: "website_booking_received",
+    label: "Solicitud recibida (web)",
+    description: "Al reservar desde la página pública; gestión por WhatsApp.",
+  },
+  {
     key: "booking_confirmed",
     label: "Reserva confirmada",
     description: "Confirma la reserva al cliente.",

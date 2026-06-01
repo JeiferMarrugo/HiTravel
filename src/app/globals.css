@@ -8,11 +8,15 @@
 
 html {
   scroll-behavior: smooth;
+  overflow-x: hidden;
 }
 
 body {
   @apply bg-background text-on-surface antialiased;
   font-family: var(--font-plus-jakarta-sans), sans-serif;
+  overflow-x: hidden;
+  max-width: 100vw;
+  position: relative;
 }
 
 .material-symbols-outlined {

@@ -1,7 +1,12 @@
 import Link from "next/link";
 import { ToursInventory } from "@/components/admin/tours-inventory";
+import { listTours } from "@/lib/catalog/tours";
 
-export default function AdminToursPage() {
+export const dynamic = "force-dynamic";
+
+export default async function AdminToursPage() {
+  const initialTours = await listTours();
+
   return (
     <div className="w-full">
       <section className="mb-8 flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
@@ -19,7 +24,7 @@ export default function AdminToursPage() {
           + Agregar experiencia
         </Link>
       </section>
-      <ToursInventory />
+      <ToursInventory initialTours={initialTours} />
     </div>
   );
 }

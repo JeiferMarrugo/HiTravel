@@ -14,6 +14,8 @@ import type {
 export type DashboardMetricsPayload = {
   stats: DashboardStat[];
   monthlySales: SalesDataPoint[];
+  /** Variación % ingresos mes actual vs anterior (null si no aplica). */
+  salesGrowthLabel: string | null;
   bookingChannels: BookingChannelMetric[];
   tourRevenueMetrics: TourRevenueMetric[];
   topClients: TopClientMetric[];
@@ -63,20 +65,38 @@ export async function getDashboardMetrics(): Promise<DashboardMetricsPayload> {
         FROM bookings b
         LEFT JOIN booking_payments pay ON pay.booking_id = b.id
       `),
-      query<{ month_label: string; sales: string; bookings: string }>(`
+      query<{ month_start: Date; month_label: string; sales: string; bookings: string }>(`
+        WITH months AS (
+          SELECT gs::date AS month_start
+          FROM generate_series(
+            date_trunc('month', CURRENT_DATE)::date - INTERVAL '5 months',
+            date_trunc('month', CURRENT_DATE)::date,
+            INTERVAL '1 month'
+          ) AS gs
+        )
         SELECT
+          m.month_start,
           to_char(m.month_start, 'Mon') AS month_label,
-          COALESCE(SUM(pay.amount_cents), 0)::text AS sales,
-          COUNT(DISTINCT b.id)::text AS bookings
-        FROM generate_series(
-          date_trunc('month', CURRENT_DATE) - INTERVAL '5 months',
-          date_trunc('month', CURRENT_DATE),
-          INTERVAL '1 month'
-        ) AS m(month_start)
-        LEFT JOIN bookings b ON date_trunc('month', b.created_at) = m.month_start
-        LEFT JOIN booking_payments pay ON pay.booking_id = b.id
-          AND date_trunc('month', pay.paid_at) = m.month_start
-        GROUP BY m.month_start
+          COALESCE(
+            NULLIF((
+              SELECT SUM(p.amount_cents)
+              FROM booking_payments p
+              WHERE date_trunc('month', p.paid_at)::date = m.month_start
+            ), 0),
+            (
+              SELECT COALESCE(SUM(b.amount_cents), 0)
+              FROM bookings b
+              WHERE date_trunc('month', b.created_at)::date = m.month_start
+                AND b.approval_status != 'cancelled'
+            ),
+            0
+          )::text AS sales,
+          COALESCE((
+            SELECT COUNT(*)::int
+            FROM bookings b
+            WHERE date_trunc('month', b.created_at)::date = m.month_start
+          ), 0)::text AS bookings
+        FROM months m
         ORDER BY m.month_start ASC
       `),
       query<{ source: string; total: string }>(`
@@ -200,6 +220,26 @@ export async function getDashboardMetrics(): Promise<DashboardMetricsPayload> {
     },
   ];
 
+  const monthlySales: SalesDataPoint[] = monthlyRows.map((row) => ({
+    month: row.month_label,
+    sales: Number(row.sales),
+    bookings: Number(row.bookings),
+  }));
+
+  const salesGrowthLabel = (() => {
+    if (monthlySales.length < 2) {
+      return null;
+    }
+    const current = monthlySales[monthlySales.length - 1]?.sales ?? 0;
+    const previous = monthlySales[monthlySales.length - 2]?.sales ?? 0;
+    if (previous <= 0) {
+      return current > 0 ? "+100% vs mes anterior" : "Sin variación";
+    }
+    const pct = ((current - previous) / previous) * 100;
+    const sign = pct >= 0 ? "+" : "";
+    return `${sign}${pct.toFixed(1)}% vs mes anterior`;
+  })();
+
   const channelTotal = channelRows.reduce((sum, row) => sum + Number(row.total), 0) || 1;
   const bookingChannels: BookingChannelMetric[] = channelRows.map((row) => ({
     name: row.source === "website" ? "Sitio web" : row.source === "admin" ? "Admin" : row.source,
@@ -209,11 +249,8 @@ export async function getDashboardMetrics(): Promise<DashboardMetricsPayload> {
 
   return {
     stats: dashboardStats,
-    monthlySales: monthlyRows.map((row) => ({
-      month: row.month_label,
-      sales: Number(row.sales),
-      bookings: Number(row.bookings),
-    })),
+    monthlySales,
+    salesGrowthLabel,
     bookingChannels,
     tourRevenueMetrics: tourRows.map((row) => ({
       tour: row.tour_name,

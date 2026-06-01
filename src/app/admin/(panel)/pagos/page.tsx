@@ -1,8 +1,11 @@
 import { PaymentsOverview } from "@/components/admin/payments-overview";
+import { getPaymentsCashReport, listAllPayments } from "@/lib/catalog/payments";
 
 export const dynamic = "force-dynamic";
 
-export default function AdminPaymentsPage() {
+export default async function AdminPaymentsPage() {
+  const [payments, report] = await Promise.all([listAllPayments({}), getPaymentsCashReport({})]);
+
   return (
     <div className="w-full">
       <section className="mb-8">
@@ -11,7 +14,7 @@ export default function AdminPaymentsPage() {
           Todos los abonos registrados, comprobantes y reporte de caja por método y moneda.
         </p>
       </section>
-      <PaymentsOverview />
+      <PaymentsOverview initialPayments={payments} initialReport={report} />
     </div>
   );
 }

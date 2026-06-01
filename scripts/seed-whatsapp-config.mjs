@@ -17,6 +17,14 @@ const sessionId = process.env.OPENWA_SESSION_ID?.trim() || null;
 
 const templates = [
   {
+    template_key: "website_booking_received",
+    name: "Solicitud recibida (web)",
+    description:
+      "Se envía al crear una solicitud desde la página pública. Informa que el resto se gestionará por WhatsApp.",
+    body:
+      "Hola {{customer_name}}, recibimos tu solicitud de reserva *{{booking_code}}* para *{{tour_name}}* el {{checkin_date}}.\n\nEl resto de tu reserva (confirmación, pagos y detalles) la gestionaremos contigo por este medio de WhatsApp.\n\nCódigo: {{booking_code}}\nTotal estimado: {{amount}}\n\n— HI TRAVEL",
+  },
+  {
     template_key: "booking_confirmed",
     name: "Reserva confirmada",
     description: "Se envía al confirmar la reserva (botón Confirmar en Reservas), no al registrar pagos.",

@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+import { readAdminFormBody } from "@/lib/admin/read-admin-form-body";
+import { respondAdminFormSave } from "@/lib/admin/respond-admin-form-save";
 import { isSessionError, requireAdminSession } from "@/lib/auth/require-session";
 import { createBooking, getBookingStats, listBookings } from "@/lib/catalog/bookings";
 import { parseMoneyInput } from "@/lib/catalog/money";
@@ -77,9 +79,9 @@ export async function POST(request: Request) {
   }
 
   try {
-    const body = parseBookingBody((await request.json()) as Record<string, unknown>);
-    const booking = await createBooking(body);
-    return NextResponse.json(booking, { status: 201 });
+    const { body, prefersJson } = await readAdminFormBody<Record<string, unknown>>(request);
+    const booking = await createBooking(parseBookingBody(body));
+    return respondAdminFormSave(request, "/admin/reservas?saved=1", booking, prefersJson, { status: 201 });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Error al crear reserva.";
     const status = message.includes("obligatorio") || message.includes("Selecciona") ? 400 : 500;

@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import type { AdminNavItem } from "@/lib/admin/types";
 import { AdminLogoutButton } from "@/components/admin/admin-logout-button";
+import type { AdminNavItem } from "@/lib/admin/types";
 
 const navItems: AdminNavItem[] = [
   { label: "Dashboard", href: "/admin", icon: "dashboard", match: "exact" },
@@ -29,15 +29,10 @@ export function AdminSidebar() {
   return (
     <aside className="hidden w-[236px] flex-col bg-primary px-4 py-6 text-white shadow-2xl lg:flex">
       <div className="px-2">
-        <div className="mb-1 flex items-center gap-3">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-secondary-container text-primary">
-            <span className="material-symbols-outlined text-lg">flight_takeoff</span>
-          </div>
-          <div>
-            <p className="text-[18px] font-extrabold tracking-tight text-secondary-container">HI TRAVEL</p>
-            <p className="text-xs text-white/70">Admin Console</p>
-          </div>
-        </div>
+        <Link href="/admin" className="mb-1 block">
+          <p className="text-[18px] font-extrabold tracking-tight text-secondary-container">HI TRAVEL</p>
+          <p className="mt-1 text-xs text-white/70">Admin Console</p>
+        </Link>
       </div>
 
       <nav className="mt-10 space-y-2">

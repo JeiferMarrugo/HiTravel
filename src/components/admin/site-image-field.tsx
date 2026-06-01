@@ -1,5 +1,6 @@
 "use client";
 
+import { adminFetch } from "@/lib/admin/admin-fetch";
 import Image from "next/image";
 import { useId, useState } from "react";
 import { isUploadedSiteImage } from "@/lib/site-content/utils";
@@ -29,7 +30,7 @@ export function SiteImageField({
       const formData = new FormData();
       formData.append("file", file);
       formData.append("folder", "site");
-      const response = await fetch("/api/admin/uploads", { method: "POST", body: formData });
+      const response = await adminFetch("/api/admin/uploads", { method: "POST", body: formData });
       const payload = (await response.json()) as { url?: string; error?: string };
       if (!response.ok || !payload.url) {
         throw new Error(payload.error ?? "Error al subir imagen.");

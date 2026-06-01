@@ -1,8 +1,10 @@
 "use client";
 
+import { adminFetch } from "@/lib/admin/admin-fetch";
+import { submitAdminJsonForm } from "@/lib/admin/submit-admin-json-form";
 import Image from "next/image";
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { BookingStatusBadge } from "@/components/admin/booking-status-badge";
 import { BookingWhatsAppActions } from "@/components/admin/booking-whatsapp-actions";
 import { formatMoneyDisplay, moneyInputHint } from "@/lib/catalog/money";
@@ -61,7 +63,7 @@ export function BookingPaymentsPanel({ bookingId }: BookingPaymentsPanelProps) {
   const load = useCallback(async () => {
     setIsLoading(true);
     try {
-      const response = await fetch(`/api/admin/bookings/${bookingId}/payments`, { cache: "no-store" });
+      const response = await adminFetch(`/api/admin/bookings/${bookingId}/payments`, { cache: "no-store" });
       const payload = (await response.json()) as BookingWithPayments & { error?: string };
       if (!response.ok) {
         throw new Error(payload.error ?? "Error al cargar.");
@@ -78,13 +80,26 @@ export function BookingPaymentsPanel({ bookingId }: BookingPaymentsPanelProps) {
     void load();
   }, [load]);
 
+  const savePayload = useMemo(
+    () =>
+      JSON.stringify({
+        amount: Number(form.amount),
+        paymentMethod: form.paymentMethod,
+        reference: form.reference || undefined,
+        voucherUrl: form.voucherUrl || undefined,
+        notes: form.notes || undefined,
+        paidAt: form.paidAt || undefined,
+      }),
+    [form],
+  );
+
   async function uploadVoucher(file: File) {
     setIsUploading(true);
     try {
       const formData = new FormData();
       formData.append("file", file);
       formData.append("folder", "payments");
-      const response = await fetch("/api/admin/uploads", { method: "POST", body: formData });
+      const response = await adminFetch("/api/admin/uploads", { method: "POST", body: formData });
       const payload = (await response.json()) as { url?: string; error?: string };
       if (!response.ok || !payload.url) {
         throw new Error(payload.error ?? "Error al subir comprobante.");
@@ -98,34 +113,18 @@ export function BookingPaymentsPanel({ bookingId }: BookingPaymentsPanelProps) {
     }
   }
 
-  async function handleSubmit(event: React.FormEvent) {
-    event.preventDefault();
-    setIsSaving(true);
-    try {
-      const response = await fetch(`/api/admin/bookings/${bookingId}/payments`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          amount: Number(form.amount),
-          paymentMethod: form.paymentMethod,
-          reference: form.reference || undefined,
-          voucherUrl: form.voucherUrl || undefined,
-          notes: form.notes || undefined,
-          paidAt: form.paidAt || undefined,
-        }),
-      });
-      const payload = (await response.json()) as BookingWithPayments & { error?: string };
-      if (!response.ok) {
-        throw new Error(payload.error ?? "No fue posible registrar el pago.");
-      }
-      setData(payload);
-      setForm(emptyPaymentForm());
-      notify.success("Pago registrado.");
-    } catch (error) {
-      notify.error(error instanceof Error ? error.message : "Error al guardar.");
-    } finally {
-      setIsSaving(false);
-    }
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    await submitAdminJsonForm<BookingWithPayments>(event, {
+      url: `/api/admin/bookings/${bookingId}/payments`,
+      method: "POST",
+      payload: savePayload,
+      setSaving: setIsSaving,
+      onSuccess: (payload) => {
+        setData(payload);
+        setForm(emptyPaymentForm());
+        notify.success("Pago registrado.");
+      },
+    });
   }
 
   async function removePayment(paymentId: string) {
@@ -133,7 +132,7 @@ export function BookingPaymentsPanel({ bookingId }: BookingPaymentsPanelProps) {
       return;
     }
     try {
-      const response = await fetch(`/api/admin/bookings/${bookingId}/payments/${paymentId}`, {
+      const response = await adminFetch(`/api/admin/bookings/${bookingId}/payments/${paymentId}`, {
         method: "DELETE",
       });
       const payload = (await response.json()) as BookingWithPayments & { error?: string };
@@ -238,7 +237,13 @@ export function BookingPaymentsPanel({ bookingId }: BookingPaymentsPanelProps) {
       </article>
 
       <div className="grid gap-8 lg:grid-cols-[1fr_1.1fr]">
-        <form onSubmit={handleSubmit} className="rounded-[2rem] bg-white p-6 coastal-shadow space-y-4">
+        <form
+          method="POST"
+          action={`/api/admin/bookings/${bookingId}/payments`}
+          onSubmit={(event) => void handleSubmit(event)}
+          className="rounded-[2rem] bg-white p-6 coastal-shadow space-y-4"
+        >
+          <input type="hidden" name="payload" value={savePayload} readOnly />
           <h2 className="text-lg font-semibold text-primary">Registrar abono</h2>
           <p className="text-sm text-on-surface-variant">
             Cada pago se descuenta del saldo de la reserva. {moneyInputHint(booking.currency)}

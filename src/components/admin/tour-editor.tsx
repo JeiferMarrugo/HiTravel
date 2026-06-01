@@ -1,8 +1,10 @@
 "use client";
 
+import { adminFetch } from "@/lib/admin/admin-fetch";
+import { submitAdminJsonForm } from "@/lib/admin/submit-admin-json-form";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { TourImagesSection } from "@/components/admin/tour-images-section";
 import { amountFromStorage, amountToStorage, moneyInputHint } from "@/lib/catalog/money";
 import type {
@@ -64,29 +66,74 @@ function listToLines(items: string[]) {
 type TourEditorProps = {
   tourId?: string;
   isNew?: boolean;
-};
-
-export function TourEditor({ tourId, isNew = false }: TourEditorProps) {
-  const router = useRouter();
-  const [isLoading, setIsLoading] = useState(!isNew);
-  const [isSaving, setIsSaving] = useState(false);
-  const [isUploading, setIsUploading] = useState(false);
-  const [catalog, setCatalog] = useState<{
+  initialCatalog?: {
     currencies: CatalogCurrency[];
     countries: CatalogCountry[];
     categories: TourCategory[];
-  } | null>(null);
-  const [form, setForm] = useState(emptyTour());
-  const [longDescription, setLongDescription] = useState([""]);
-  const [includes, setIncludes] = useState([""]);
-  const [excludes, setExcludes] = useState([""]);
-  const [highlights, setHighlights] = useState([""]);
-  const [gallery, setGallery] = useState<string[]>([]);
-  const [pricing, setPricing] = useState<PricingSeason[]>([]);
-  const [itinerary, setItinerary] = useState<ItineraryItem[]>([]);
+  };
+  initialTour?: TourRecord;
+};
+
+function buildFormFromTour(tour: TourRecord) {
+  return {
+    ...tour,
+    priceFromCents: amountFromStorage(tour.priceFromCents, tour.currency),
+  };
+}
+
+export function TourEditor({
+  tourId,
+  isNew = false,
+  initialCatalog,
+  initialTour,
+}: TourEditorProps) {
+  const router = useRouter();
+  const [isLoading, setIsLoading] = useState(!isNew && !initialTour);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [catalog, setCatalog] = useState(initialCatalog ?? null);
+  const [form, setForm] = useState(() => {
+    if (initialTour) {
+      return buildFormFromTour(initialTour);
+    }
+
+    const defaults = emptyTour();
+    if (initialCatalog) {
+      defaults.country = initialCatalog.countries[0]?.name ?? defaults.country;
+      defaults.currency = initialCatalog.currencies[0]?.code ?? defaults.currency;
+    }
+    return defaults;
+  });
+  const [longDescription, setLongDescription] = useState(() =>
+    initialTour ? listToLines(initialTour.longDescription) : [""],
+  );
+  const [includes, setIncludes] = useState(() => (initialTour ? listToLines(initialTour.includes) : [""]));
+  const [excludes, setExcludes] = useState(() => (initialTour ? listToLines(initialTour.excludes) : [""]));
+  const [highlights, setHighlights] = useState(() => (initialTour ? listToLines(initialTour.highlights) : [""]));
+  const [gallery, setGallery] = useState<string[]>(() => initialTour?.gallery ?? []);
+  const [pricing, setPricing] = useState<PricingSeason[]>(() => initialTour?.pricingSeasons ?? []);
+  const [itinerary, setItinerary] = useState<ItineraryItem[]>(() => initialTour?.itinerary ?? []);
+
+  const savePayload = useMemo(
+    () =>
+      JSON.stringify({
+        ...form,
+        longDescription: linesToList(longDescription),
+        includes: linesToList(includes),
+        excludes: linesToList(excludes),
+        highlights: linesToList(highlights),
+        gallery,
+        pricingSeasons: pricing,
+        itinerary,
+        priceFromCents: amountToStorage(Number(form.priceFromCents) || 0, form.currency),
+      }),
+    [excludes, form, gallery, highlights, includes, itinerary, longDescription, pricing],
+  );
+
+  const saveAction = isNew ? "/api/admin/tours" : `/api/admin/tours/${tourId}`;
 
   const loadCatalog = useCallback(async () => {
-    const response = await fetch("/api/admin/catalog-options/active");
+    const response = await adminFetch("/api/admin/catalog-options/active");
     const payload = (await response.json()) as {
       currencies: CatalogCurrency[];
       countries: CatalogCountry[];
@@ -116,7 +163,7 @@ export function TourEditor({ tourId, isNew = false }: TourEditorProps) {
         return;
       }
 
-      const response = await fetch(`/api/admin/tours/${tourId}`);
+      const response = await adminFetch(`/api/admin/tours/${tourId}`);
       const data = (await response.json()) as TourRecord & { error?: string };
       if (!response.ok) {
         throw new Error(data.error ?? "No fue posible cargar el tour.");
@@ -141,8 +188,11 @@ export function TourEditor({ tourId, isNew = false }: TourEditorProps) {
   }, [isNew, loadCatalog, tourId]);
 
   useEffect(() => {
+    if (initialCatalog && (isNew || initialTour)) {
+      return;
+    }
     void loadTour();
-  }, [loadTour]);
+  }, [initialCatalog, initialTour, isNew, loadTour]);
 
   async function uploadFile(file: File, target: "hero" | "gallery") {
     setIsUploading(true);
@@ -151,7 +201,7 @@ export function TourEditor({ tourId, isNew = false }: TourEditorProps) {
       formData.append("file", file);
       formData.append("folder", "tours");
 
-      const response = await fetch("/api/admin/uploads", { method: "POST", body: formData });
+      const response = await adminFetch("/api/admin/uploads", { method: "POST", body: formData });
       const payload = (await response.json()) as { url?: string; error?: string };
       if (!response.ok || !payload.url) {
         throw new Error(payload.error ?? "Error al subir imagen.");
@@ -170,40 +220,18 @@ export function TourEditor({ tourId, isNew = false }: TourEditorProps) {
     }
   }
 
-  async function handleSave() {
-    setIsSaving(true);
-    try {
-      const payload = {
-        ...form,
-        longDescription: linesToList(longDescription),
-        includes: linesToList(includes),
-        excludes: linesToList(excludes),
-        highlights: linesToList(highlights),
-        gallery,
-        pricingSeasons: pricing,
-        itinerary,
-        priceFromCents: amountToStorage(Number(form.priceFromCents) || 0, form.currency),
-      };
-
-      const response = await fetch(isNew ? "/api/admin/tours" : `/api/admin/tours/${tourId}`, {
-        method: isNew ? "POST" : "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      const data = (await response.json()) as TourRecord & { error?: string };
-      if (!response.ok) {
-        throw new Error(data.error ?? "No fue posible guardar.");
-      }
-
-      notify.success(isNew ? "Tour creado." : "Tour actualizado.");
-      router.push(`/admin/tours/${data.id}`);
-      router.refresh();
-    } catch (error) {
-      notify.error(error instanceof Error ? error.message : "Error al guardar.");
-    } finally {
-      setIsSaving(false);
-    }
+  async function handleSave(event: React.FormEvent<HTMLFormElement>) {
+    await submitAdminJsonForm<TourRecord>(event, {
+      url: saveAction,
+      method: isNew ? "POST" : "PUT",
+      payload: savePayload,
+      setSaving: setIsSaving,
+      onSuccess: async (data) => {
+        notify.success(isNew ? "Tour creado." : "Tour actualizado.");
+        router.push(`/admin/tours/${data.id}`);
+        router.refresh();
+      },
+    });
   }
 
   if (isLoading) {
@@ -211,14 +239,20 @@ export function TourEditor({ tourId, isNew = false }: TourEditorProps) {
   }
 
   return (
-    <div className="space-y-6">
+    <form
+      id="admin-tour-editor-form"
+      method="POST"
+      action={saveAction}
+      onSubmit={(event) => void handleSave(event)}
+      className="space-y-6"
+    >
+      <input type="hidden" name="payload" value={savePayload} readOnly />
       <section className="flex flex-wrap gap-3">
         <Link href="/admin/tours" className="rounded-2xl border border-outline-variant/30 bg-white px-5 py-3 text-sm font-semibold text-primary">
           Volver al inventario
         </Link>
         <button
-          type="button"
-          onClick={() => void handleSave()}
+          type="submit"
           disabled={isSaving}
           className="rounded-2xl bg-primary px-5 py-3 text-sm font-semibold text-white disabled:opacity-60"
         >
@@ -528,6 +562,6 @@ export function TourEditor({ tourId, isNew = false }: TourEditorProps) {
           />
         </div>
       </article>
-    </div>
+    </form>
   );
 }

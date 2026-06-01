@@ -4,6 +4,7 @@ import { quotePublicTour } from "@/lib/catalog/public-tour-quote";
 import { getTourBySlug } from "@/lib/catalog/tours";
 import type { BookingRecord } from "@/lib/catalog/types";
 import { parseAndValidatePhone } from "@/lib/phone/validate";
+import { sendWebsiteBookingReceivedNotification } from "@/lib/whatsapp/booking-notifications";
 
 export type CreatePublicBookingInput = {
   tourSlug: string;
@@ -66,7 +67,13 @@ export async function createPublicBooking(input: CreatePublicBookingInput): Prom
     await replaceBookingGuests(booking.id, input.guests);
   }
 
-  return (await getBookingByCode(booking.bookingCode)) ?? booking;
+  const finalBooking = (await getBookingByCode(booking.bookingCode)) ?? booking;
+
+  void sendWebsiteBookingReceivedNotification(finalBooking.id).catch((error) => {
+    console.error("[whatsapp] website_booking_received:", error);
+  });
+
+  return finalBooking;
 }
 
 export async function getPublicBookingByCode(code: string) {

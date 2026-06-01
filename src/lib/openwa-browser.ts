@@ -31,8 +31,10 @@ type StatsRequestOptions =
 async function openWaBrowserRequest<T>(path: string, options: RequestOptions = {}) {
   const response = await fetch(path, {
     method: options.method ?? "GET",
+    credentials: "include",
     headers: {
       "Content-Type": "application/json",
+      "ngrok-skip-browser-warning": "true",
     },
     body: options.body === undefined ? undefined : JSON.stringify(options.body),
     cache: "no-store",

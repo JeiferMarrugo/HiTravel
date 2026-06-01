@@ -1,5 +1,6 @@
 "use client";
 
+import { adminFetch } from "@/lib/admin/admin-fetch";
 import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
@@ -7,15 +8,15 @@ import { formatMoneyDisplay } from "@/lib/catalog/money";
 import type { TourListItem } from "@/lib/catalog/types";
 import { notify } from "@/lib/toast";
 
-export function ToursInventory() {
-  const [tours, setTours] = useState<TourListItem[]>([]);
+export function ToursInventory({ initialTours }: { initialTours?: TourListItem[] }) {
+  const [tours, setTours] = useState<TourListItem[]>(initialTours ?? []);
   const [filter, setFilter] = useState("all");
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(initialTours === undefined);
 
   const load = useCallback(async () => {
     setIsLoading(true);
     try {
-      const response = await fetch("/api/admin/tours");
+      const response = await adminFetch("/api/admin/tours");
       const data = (await response.json()) as { tours: TourListItem[]; error?: string };
       if (!response.ok) {
         throw new Error(data.error ?? "Error al cargar tours.");
@@ -29,8 +30,11 @@ export function ToursInventory() {
   }, []);
 
   useEffect(() => {
+    if (initialTours !== undefined) {
+      return;
+    }
     void load();
-  }, [load]);
+  }, [initialTours, load]);
 
   const categories = ["all", ...new Set(tours.map((t) => t.categoryName).filter(Boolean) as string[])];
   const filtered =

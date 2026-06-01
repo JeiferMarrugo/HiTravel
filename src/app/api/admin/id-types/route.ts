@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+import { readAdminFormBody } from "@/lib/admin/read-admin-form-body";
+import { respondAdminFormSave } from "@/lib/admin/respond-admin-form-save";
 import { isSessionError, requireAdminSession } from "@/lib/auth/require-session";
 import { createIdType, deleteIdType, listIdTypes, setIdTypeActive } from "@/lib/catalog/id-types";
 
@@ -23,7 +25,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    const body = (await request.json()) as Record<string, unknown>;
+    const { body, prefersJson } = await readAdminFormBody<Record<string, unknown>>(request);
     const kind = body.kind;
 
     if (kind === "create") {
@@ -42,7 +44,12 @@ export async function POST(request: Request) {
       throw new Error("Solicitud no válida.");
     }
 
-    return NextResponse.json({ idTypes: await listIdTypes() });
+    return respondAdminFormSave(
+      request,
+      "/admin/configuracion?saved=id-types",
+      { idTypes: await listIdTypes() },
+      prefersJson,
+    );
   } catch (error) {
     const message = error instanceof Error ? error.message : "Error al guardar.";
     return NextResponse.json({ error: message }, { status: 400 });

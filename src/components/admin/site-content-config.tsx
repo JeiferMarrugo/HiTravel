@@ -1,6 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { adminFetch } from "@/lib/admin/admin-fetch";
+import { submitAdminJsonForm } from "@/lib/admin/submit-admin-json-form";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type { SiteContent, SiteStat, SiteValueCard } from "@/lib/site-content/types";
 import { defaultSiteContent } from "@/lib/site-content/defaults";
 import { SiteImageField } from "@/components/admin/site-image-field";
@@ -44,17 +46,19 @@ function Field({
   );
 }
 
-export function SiteContentConfig() {
+export function SiteContentConfig({ initialContent }: { initialContent?: SiteContent }) {
   const [active, setActive] = useState<SectionId>("brand");
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(initialContent === undefined);
   const [isSaving, setIsSaving] = useState(false);
-  const [content, setContent] = useState<SiteContent>(defaultSiteContent);
+  const [content, setContent] = useState<SiteContent>(initialContent ?? defaultSiteContent);
   const [newCountry, setNewCountry] = useState("");
+
+  const savePayload = useMemo(() => JSON.stringify(content), [content]);
 
   const load = useCallback(async () => {
     setIsLoading(true);
     try {
-      const response = await fetch("/api/admin/site-content", { cache: "no-store" });
+      const response = await adminFetch("/api/admin/site-content", { cache: "no-store" });
       const data = (await response.json()) as SiteContent & { error?: string };
       if (!response.ok) {
         throw new Error(data.error ?? "Error al cargar.");
@@ -68,28 +72,23 @@ export function SiteContentConfig() {
   }, []);
 
   useEffect(() => {
-    void load();
-  }, [load]);
-
-  async function handleSave() {
-    setIsSaving(true);
-    try {
-      const response = await fetch("/api/admin/site-content", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(content),
-      });
-      const data = (await response.json()) as SiteContent & { error?: string };
-      if (!response.ok) {
-        throw new Error(data.error ?? "Error al guardar.");
-      }
-      setContent(data);
-      notify.success("Contenido del sitio guardado. Recarga la web pública para ver los cambios.");
-    } catch (error) {
-      notify.error(error instanceof Error ? error.message : "Error al guardar.");
-    } finally {
-      setIsSaving(false);
+    if (initialContent !== undefined) {
+      return;
     }
+    void load();
+  }, [initialContent, load]);
+
+  async function handleSave(event: React.FormEvent<HTMLFormElement>) {
+    await submitAdminJsonForm<SiteContent>(event, {
+      url: "/api/admin/site-content",
+      method: "PUT",
+      payload: savePayload,
+      setSaving: setIsSaving,
+      onSuccess: (data) => {
+        setContent(data);
+        notify.success("Contenido del sitio guardado. Recarga la web pública para ver los cambios.");
+      },
+    });
   }
 
   function patchStat(index: number, patch: Partial<SiteStat>) {
@@ -113,6 +112,8 @@ export function SiteContentConfig() {
   }
 
   return (
+    <form method="POST" action="/api/admin/site-content" onSubmit={(event) => void handleSave(event)}>
+    <input type="hidden" name="payload" value={savePayload} readOnly />
     <article className="rounded-[2rem] bg-white coastal-shadow overflow-hidden">
       <div className="border-b border-outline-variant/15 bg-gradient-to-r from-primary/5 to-secondary-container/30 px-6 py-5">
         <h2 className="text-lg font-semibold text-primary">Sitio público (textos e imágenes)</h2>
@@ -354,8 +355,7 @@ export function SiteContentConfig() {
           Descartar cambios
         </button>
         <button
-          type="button"
-          onClick={() => void handleSave()}
+          type="submit"
           disabled={isSaving}
           className="rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-white disabled:opacity-60"
         >
@@ -363,5 +363,6 @@ export function SiteContentConfig() {
         </button>
       </div>
     </article>
+    </form>
   );
 }

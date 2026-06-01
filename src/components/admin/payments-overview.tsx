@@ -1,7 +1,8 @@
 "use client";
 
+import { adminFetch } from "@/lib/admin/admin-fetch";
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { formatMoneyDisplay } from "@/lib/catalog/money";
 import type { PaymentListItem, PaymentsCashReport } from "@/lib/catalog/payments";
 import { PAYMENT_METHOD_OPTIONS, type PaymentMethod } from "@/lib/catalog/types";
@@ -35,12 +36,19 @@ const emptyFilters = (): Filters => ({
   currency: "",
 });
 
-export function PaymentsOverview() {
-  const [payments, setPayments] = useState<PaymentListItem[]>([]);
-  const [report, setReport] = useState<PaymentsCashReport | null>(null);
+export function PaymentsOverview({
+  initialPayments,
+  initialReport,
+}: {
+  initialPayments?: PaymentListItem[];
+  initialReport?: PaymentsCashReport | null;
+}) {
+  const [payments, setPayments] = useState<PaymentListItem[]>(initialPayments ?? []);
+  const [report, setReport] = useState<PaymentsCashReport | null>(initialReport ?? null);
   const [filters, setFilters] = useState(emptyFilters);
   const [applied, setApplied] = useState(emptyFilters);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(initialPayments === undefined);
+  const skipInitialFetchRef = useRef(initialPayments !== undefined);
 
   const load = useCallback(async (nextFilters: Filters) => {
     setIsLoading(true);
@@ -52,7 +60,7 @@ export function PaymentsOverview() {
       if (nextFilters.currency) params.set("currency", nextFilters.currency);
 
       const query = params.toString();
-      const response = await fetch(`/api/admin/payments${query ? `?${query}` : ""}`, {
+      const response = await adminFetch(`/api/admin/payments${query ? `?${query}` : ""}`, {
         cache: "no-store",
       });
       const payload = (await response.json()) as {
@@ -73,6 +81,10 @@ export function PaymentsOverview() {
   }, []);
 
   useEffect(() => {
+    if (skipInitialFetchRef.current) {
+      skipInitialFetchRef.current = false;
+      return;
+    }
     void load(applied);
   }, [applied, load]);
 
@@ -90,6 +102,8 @@ export function PaymentsOverview() {
   return (
     <div className="space-y-8">
       <form
+        method="get"
+        action="/admin/pagos"
         onSubmit={applyFilters}
         className="flex flex-wrap items-end gap-4 rounded-[2rem] bg-white p-6 coastal-shadow"
       >

@@ -5,6 +5,7 @@ import {
   sendBookingConfirmedNotification,
   sendCheckinReminderNotification,
   sendPostExperienceReviewNotification,
+  sendWebsiteBookingReceivedNotification,
 } from "@/lib/whatsapp/booking-notifications";
 import { getWhatsAppConfig } from "@/lib/whatsapp/config";
 import type { WhatsAppTemplateKey } from "@/lib/whatsapp/types";
@@ -12,6 +13,7 @@ import type { WhatsAppTemplateKey } from "@/lib/whatsapp/types";
 type RouteContext = { params: Promise<{ id: string }> };
 
 const TEMPLATE_KEYS: WhatsAppTemplateKey[] = [
+  "website_booking_received",
   "booking_confirmed",
   "checkin_reminder",
   "post_experience_review",
@@ -62,6 +64,9 @@ export async function POST(request: Request, context: RouteContext) {
   try {
     let result;
     switch (templateKey) {
+      case "website_booking_received":
+        result = await sendWebsiteBookingReceivedNotification(id, { forceResend });
+        break;
       case "booking_confirmed":
         result = await sendBookingConfirmedNotification(id, { forceResend });
         break;

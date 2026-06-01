@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+import { readAdminFormBody } from "@/lib/admin/read-admin-form-body";
+import { respondAdminFormSave } from "@/lib/admin/respond-admin-form-save";
 import { isSessionError, requireAdminSession } from "@/lib/auth/require-session";
 import { assertCountryAllowed, assertCurrencyAllowed } from "@/lib/catalog/catalog-options";
 import { amountToStorage } from "@/lib/catalog/money";
@@ -79,12 +81,12 @@ export async function POST(request: Request) {
   }
 
   try {
-    const body = (await request.json()) as Record<string, unknown>;
+    const { body, prefersJson } = await readAdminFormBody<Record<string, unknown>>(request);
     const input = parseTourBody(body);
     await assertCurrencyAllowed(input.currency);
     await assertCountryAllowed(input.country);
     const tour = await createTour(input);
-    return NextResponse.json(tour, { status: 201 });
+    return respondAdminFormSave(request, `/admin/tours/${tour.id}?saved=1`, tour, prefersJson, { status: 201 });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Error al crear tour.";
     const status = message.includes("obligatorio") || message.includes("válido") ? 400 : 500;

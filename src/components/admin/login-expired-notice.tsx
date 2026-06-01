@@ -11,6 +11,9 @@ export function LoginExpiredNotice() {
     if (searchParams.get("expired") === "1") {
       notify.warning("Tu sesión expiró. Inicia sesión nuevamente.");
     }
+    if (searchParams.get("error") === "invalid") {
+      notify.error("Credenciales inválidas.");
+    }
   }, [searchParams]);
 
   return null;

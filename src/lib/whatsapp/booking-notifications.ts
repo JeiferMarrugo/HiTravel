@@ -207,7 +207,7 @@ export async function sendBookingWhatsApp(
       return { sent: false, skipped: true, reason: "La reserva debe estar confirmada." };
     }
 
-    const phone = booking.customerPhone.trim();
+    const phone = (booking.customerPhoneE164 ?? booking.customerPhone).trim();
     if (!phone) {
       return { sent: false, error: "La reserva no tiene teléfono del cliente." };
     }
@@ -261,6 +261,26 @@ export async function sendBookingWhatsApp(
       error: error instanceof Error ? error.message : "Error al preparar el mensaje.",
     };
   }
+}
+
+export async function sendWebsiteBookingReceivedNotification(
+  bookingId: string,
+  options: { forceResend?: boolean } = {},
+): Promise<WhatsAppSendResult> {
+  const config = await getWhatsAppConfig();
+  const booking = await getBookingById(bookingId);
+  if (!booking || booking.bookingSource !== "website") {
+    return { sent: false, skipped: true, reason: "No aplica a esta reserva." };
+  }
+
+  return sendBookingWhatsApp({
+    templateKey: "website_booking_received",
+    bookingId,
+    enabled: config.settings.sendOnWebsiteBooking,
+    requireConfirmed: false,
+    forceResend: options.forceResend,
+    manualSend: Boolean(options.forceResend),
+  });
 }
 
 export async function sendBookingConfirmedNotification(

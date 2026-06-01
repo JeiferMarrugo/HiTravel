@@ -1,6 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
+import { AdminFetchBootstrap } from "@/components/admin/admin-fetch-bootstrap";
 import { AdminSidebar } from "@/components/admin/admin-sidebar";
 import { AdminTopbar } from "@/components/admin/admin-topbar";
 import { useAdminSessionGuard } from "@/hooks/use-admin-session-guard";
@@ -18,6 +19,7 @@ export function AdminShell({ children, searchPlaceholder, userEmail, userName, u
 
   return (
     <div className="min-h-screen bg-background text-on-surface">
+      <AdminFetchBootstrap />
       <div className="flex min-h-screen">
         <AdminSidebar />
         <div className="flex min-h-screen flex-1 flex-col">

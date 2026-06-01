@@ -1,5 +1,6 @@
 "use client";
 
+import { adminFetch } from "@/lib/admin/admin-fetch";
 import { useCallback, useEffect, useState } from "react";
 import type { WhatsAppMessageLogEntry } from "@/lib/whatsapp/booking-notifications";
 import { WHATSAPP_TEMPLATE_OPTIONS, whatsappTemplateLabel } from "@/lib/whatsapp/template-labels";
@@ -42,7 +43,7 @@ export function BookingWhatsAppModal({
   const loadLogs = useCallback(async () => {
     setIsLoading(true);
     try {
-      const response = await fetch(`/api/admin/bookings/${bookingId}/whatsapp`, { cache: "no-store" });
+      const response = await adminFetch(`/api/admin/bookings/${bookingId}/whatsapp`, { cache: "no-store" });
       const payload = (await response.json()) as {
         logs?: WhatsAppMessageLogEntry[];
         maxSendAttempts?: number;
@@ -76,7 +77,7 @@ export function BookingWhatsAppModal({
   async function handleSend() {
     setIsSending(true);
     try {
-      const response = await fetch(`/api/admin/bookings/${bookingId}/whatsapp`, {
+      const response = await adminFetch(`/api/admin/bookings/${bookingId}/whatsapp`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ templateKey, forceResend }),

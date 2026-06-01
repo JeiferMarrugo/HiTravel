@@ -17,8 +17,8 @@ export default async function HomePage() {
     <>
       <TopNav content={content} active="tours" displayCurrency={displayCurrency} />
 
-      <main>
-        <section className="relative z-30 flex min-h-screen items-center justify-center overflow-x-hidden px-4 pt-20 md:px-16">
+      <main className="overflow-x-hidden pb-20 sm:pb-0">
+        <section className="relative z-0 flex min-h-[calc(100dvh-3.5rem)] w-full max-w-full items-center justify-center overflow-x-hidden px-3 pt-14 sm:min-h-screen sm:px-4 sm:pt-20 md:px-16">
           <div className="absolute inset-0 z-0">
             <div className="absolute inset-0 z-10 bg-gradient-to-b from-primary/40 to-background/20" />
             <Image
@@ -32,11 +32,13 @@ export default async function HomePage() {
             />
           </div>
 
-          <div className="relative z-20 mx-auto max-w-4xl space-y-8 text-center">
-            <h1 className="text-[36px] font-extrabold leading-[44px] text-white drop-shadow-lg md:text-[48px] md:leading-[56px]">
+          <div className="relative z-20 mx-auto w-full max-w-4xl space-y-4 px-1 text-center sm:space-y-8">
+            <h1 className="text-[1.65rem] font-extrabold leading-tight text-white drop-shadow-lg sm:text-[36px] sm:leading-[44px] md:text-[48px] md:leading-[56px]">
               {home.heroTitle}
             </h1>
-            <p className="mx-auto max-w-2xl text-lg leading-7 text-white/90">{home.heroSubtitle}</p>
+            <p className="mx-auto max-w-2xl text-base leading-6 text-white/90 sm:text-lg sm:leading-7">
+              {home.heroSubtitle}
+            </p>
             <CountrySearch countries={content.searchCountries} />
           </div>
 
@@ -44,17 +46,24 @@ export default async function HomePage() {
           <div className="absolute bottom-0 left-0 h-8 w-full bg-background" />
         </section>
 
-        <section className="mx-auto max-w-7xl px-4 py-20 md:px-16">
-          <div className="mb-12 flex flex-col items-end justify-between gap-6 md:flex-row">
-            <div className="space-y-4">
-              <span className="rounded-full bg-tertiary-container/10 px-4 py-1.5 text-sm font-semibold text-on-tertiary-container">
+        <section className="mx-auto max-w-7xl px-3 py-14 sm:px-4 sm:py-20 md:px-16">
+          <div className="mb-8 flex flex-col items-start gap-4 sm:mb-12 sm:flex-row sm:items-end sm:justify-between sm:gap-6">
+            <div className="space-y-3 sm:space-y-4">
+              <span className="inline-block rounded-full bg-tertiary-container/10 px-4 py-1.5 text-sm font-semibold text-on-tertiary-container">
                 {home.featuredBadge}
               </span>
-              <h2 className="text-[32px] font-bold leading-[40px] text-primary">{home.featuredTitle}</h2>
+              <h2 className="text-2xl font-bold leading-tight text-primary sm:text-[32px] sm:leading-[40px]">
+                {home.featuredTitle}
+              </h2>
             </div>
-            <Link href="/tours" className="group flex items-center gap-2 font-semibold text-primary">
+            <Link
+              href="/tours"
+              className="group inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-full border border-outline-variant/25 bg-white px-4 py-2.5 text-sm font-semibold text-primary shadow-sm transition hover:border-primary/30 sm:w-auto sm:border-0 sm:bg-transparent sm:px-0 sm:py-0 sm:shadow-none"
+            >
               {home.featuredLinkLabel}
-              <span className="material-symbols-outlined transition-transform group-hover:translate-x-1">arrow_forward</span>
+              <span className="material-symbols-outlined text-[18px] transition-transform group-hover:translate-x-1">
+                arrow_forward
+              </span>
             </Link>
           </div>
 
@@ -86,11 +95,11 @@ export default async function HomePage() {
                     </div>
                   ) : null}
                 </div>
-                <div className="space-y-4 p-6">
-                  <h3 className="text-[22px] font-semibold text-primary">{tour.name}</h3>
-                  <p className="line-clamp-2 text-on-surface-variant">{tour.description}</p>
-                  <div className="flex items-center justify-between border-t border-outline-variant/30 pt-4">
-                    <div className="flex gap-4">
+                <div className="space-y-4 p-4 sm:p-6">
+                  <h3 className="text-lg font-semibold text-primary sm:text-[22px]">{tour.name}</h3>
+                  <p className="line-clamp-2 text-sm text-on-surface-variant sm:text-base">{tour.description}</p>
+                  <div className="flex flex-col gap-3 border-t border-outline-variant/30 pt-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex flex-wrap gap-3 sm:gap-4">
                       <div className="flex items-center gap-1 text-on-surface-variant">
                         <span className="material-symbols-outlined text-[18px]">schedule</span>
                         <span className="text-sm">{tour.duration}</span>
@@ -100,7 +109,10 @@ export default async function HomePage() {
                         <span className="text-sm">{tour.rating.toFixed(1)}</span>
                       </div>
                     </div>
-                    <Link href={`/tours/${tour.slug}`} className="text-sm font-semibold text-primary hover:underline">
+                    <Link
+                      href={`/tours/${tour.slug}`}
+                      className="inline-flex min-h-[44px] items-center justify-center rounded-full bg-primary/5 px-4 text-sm font-semibold text-primary transition hover:bg-primary/10 sm:min-h-0 sm:bg-transparent sm:px-0 sm:hover:bg-transparent sm:hover:underline"
+                    >
                       Ver detalles
                     </Link>
                   </div>

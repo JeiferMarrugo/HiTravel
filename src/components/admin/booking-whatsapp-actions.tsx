@@ -1,5 +1,6 @@
 "use client";
 
+import { adminFetch } from "@/lib/admin/admin-fetch";
 import { useState } from "react";
 import type { BookingRecord } from "@/lib/catalog/types";
 import { BookingWhatsAppModal } from "@/components/admin/booking-whatsapp-modal";
@@ -26,7 +27,7 @@ export function BookingWhatsAppActions({ booking, onUpdated, compact }: BookingW
   async function submitConfirmEnjoy() {
     setIsConfirming(true);
     try {
-      const response = await fetch(`/api/admin/bookings/${booking.id}/confirm-experience`, {
+      const response = await adminFetch(`/api/admin/bookings/${booking.id}/confirm-experience`, {
         method: "POST",
       });
       const payload = (await response.json()) as {

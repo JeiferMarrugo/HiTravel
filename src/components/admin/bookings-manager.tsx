@@ -1,7 +1,9 @@
 "use client";
 
+import { adminFetch } from "@/lib/admin/admin-fetch";
+import { submitAdminJsonForm } from "@/lib/admin/submit-admin-json-form";
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { BookingStatusBadge } from "@/components/admin/booking-status-badge";
 import { BookingWhatsAppActions } from "@/components/admin/booking-whatsapp-actions";
 import { formatMoneyDisplay } from "@/lib/catalog/money";
@@ -82,23 +84,59 @@ const emptyForm = (): BookingForm => ({
   discountCents: "",
 });
 
-export function BookingsManager() {
-  const [bookings, setBookings] = useState<BookingRecord[]>([]);
-  const [tours, setTours] = useState<TourListItem[]>([]);
-  const [stats, setStats] = useState({
-    total: 0,
-    pendingApproval: 0,
-    confirmed: 0,
-    cancelled: 0,
-    attended: 0,
-    travelersAttended: 0,
-  });
-  const [isLoading, setIsLoading] = useState(true);
+type BookingStats = {
+  total: number;
+  pendingApproval: number;
+  confirmed: number;
+  cancelled: number;
+  attended: number;
+  travelersAttended: number;
+};
+
+const emptyStats = (): BookingStats => ({
+  total: 0,
+  pendingApproval: 0,
+  confirmed: 0,
+  cancelled: 0,
+  attended: 0,
+  travelersAttended: 0,
+});
+
+export function BookingsManager({
+  initialBookings,
+  initialStats,
+  initialTours,
+  initialPromotions,
+}: {
+  initialBookings?: BookingRecord[];
+  initialStats?: BookingStats;
+  initialTours?: TourListItem[];
+  initialPromotions?: PromotionRecord[];
+}) {
+  const [bookings, setBookings] = useState<BookingRecord[]>(initialBookings ?? []);
+  const [tours, setTours] = useState<TourListItem[]>(initialTours ?? []);
+  const [stats, setStats] = useState<BookingStats>(initialStats ?? emptyStats());
+  const [isLoading, setIsLoading] = useState(initialBookings === undefined);
   const [showForm, setShowForm] = useState(false);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("pending");
   const [form, setForm] = useState(emptyForm());
-  const [promotions, setPromotions] = useState<PromotionRecord[]>([]);
+  const [promotions, setPromotions] = useState<PromotionRecord[]>(initialPromotions ?? []);
   const [pricePreview, setPricePreview] = useState<string | null>(null);
+  const [isCreating, setIsCreating] = useState(false);
+
+  const createPayload = useMemo(
+    () =>
+      JSON.stringify({
+        ...form,
+        amountCents: form.amountCents ? Number(form.amountCents) : undefined,
+        adults: Number(form.adults),
+        children: Number(form.children),
+        promotionIds: form.promotionIds,
+        subtotalCents: form.subtotalCents ? Number(form.subtotalCents) : undefined,
+        discountCents: form.discountCents ? Number(form.discountCents) : undefined,
+      }),
+    [form],
+  );
 
   const visibleBookings =
     statusFilter === "all"
@@ -111,9 +149,9 @@ export function BookingsManager() {
     setIsLoading(true);
     try {
       const [bookingsRes, toursRes, promosRes] = await Promise.all([
-        fetch("/api/admin/bookings"),
-        fetch("/api/admin/tours"),
-        fetch("/api/admin/promotions?active=1"),
+        adminFetch("/api/admin/bookings"),
+        adminFetch("/api/admin/tours"),
+        adminFetch("/api/admin/promotions?active=1"),
       ]);
 
       const bookingsData = (await bookingsRes.json()) as {
@@ -140,8 +178,11 @@ export function BookingsManager() {
   }, []);
 
   useEffect(() => {
+    if (initialBookings !== undefined) {
+      return;
+    }
     void load();
-  }, [load]);
+  }, [initialBookings, load]);
 
   function togglePromotion(promotionId: string) {
     setForm((current) => {
@@ -162,7 +203,7 @@ export function BookingsManager() {
       return;
     }
     try {
-      const response = await fetch("/api/admin/promotions/preview", {
+      const response = await adminFetch("/api/admin/promotions/preview", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -202,34 +243,20 @@ export function BookingsManager() {
     }
   }
 
-  async function handleCreate(event: React.FormEvent) {
-    event.preventDefault();
-    try {
-      const response = await fetch("/api/admin/bookings", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...form,
-          amountCents: form.amountCents ? Number(form.amountCents) : undefined,
-          adults: Number(form.adults),
-          children: Number(form.children),
-          promotionIds: form.promotionIds,
-          subtotalCents: form.subtotalCents ? Number(form.subtotalCents) : undefined,
-          discountCents: form.discountCents ? Number(form.discountCents) : undefined,
-        }),
-      });
-      const data = (await response.json()) as { error?: string };
-      if (!response.ok) {
-        throw new Error(data.error ?? "No fue posible crear la reserva.");
-      }
-      notify.success("Reserva creada.");
-      setShowForm(false);
-      setForm(emptyForm());
-      setPricePreview(null);
-      await load();
-    } catch (error) {
-      notify.error(error instanceof Error ? error.message : "Error al crear.");
-    }
+  async function handleCreate(event: React.FormEvent<HTMLFormElement>) {
+    await submitAdminJsonForm(event, {
+      url: "/api/admin/bookings",
+      method: "POST",
+      payload: createPayload,
+      setSaving: setIsCreating,
+      onSuccess: async () => {
+        notify.success("Reserva creada.");
+        setShowForm(false);
+        setForm(emptyForm());
+        setPricePreview(null);
+        await load();
+      },
+    });
   }
 
   async function removeBooking(id: string) {
@@ -237,7 +264,7 @@ export function BookingsManager() {
       return;
     }
     try {
-      const response = await fetch(`/api/admin/bookings/${id}`, { method: "DELETE" });
+      const response = await adminFetch(`/api/admin/bookings/${id}`, { method: "DELETE" });
       const data = (await response.json()) as { error?: string };
       if (!response.ok) {
         throw new Error(data.error ?? "Error al eliminar.");
@@ -251,7 +278,7 @@ export function BookingsManager() {
 
   async function patchBooking(id: string, patch: Partial<BookingRecord>) {
     try {
-      const response = await fetch(`/api/admin/bookings/${id}`, {
+      const response = await adminFetch(`/api/admin/bookings/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(patch),
@@ -335,7 +362,13 @@ export function BookingsManager() {
       </div>
 
       {showForm ? (
-        <form onSubmit={handleCreate} className="rounded-[2rem] bg-white p-6 coastal-shadow space-y-4">
+        <form
+          method="POST"
+          action="/api/admin/bookings"
+          onSubmit={(event) => void handleCreate(event)}
+          className="rounded-[2rem] bg-white p-6 coastal-shadow space-y-4"
+        >
+          <input type="hidden" name="payload" value={createPayload} readOnly />
           <h2 className="text-lg font-semibold text-primary">Nueva reserva</h2>
           <div className="grid gap-4 md:grid-cols-2">
             <div className="md:col-span-2">
@@ -480,8 +513,12 @@ export function BookingsManager() {
               />
             </div>
           </div>
-          <button type="submit" className="rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-white">
-            Guardar reserva
+          <button
+            type="submit"
+            disabled={isCreating}
+            className="rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-white disabled:opacity-60"
+          >
+            {isCreating ? "Guardando..." : "Guardar reserva"}
           </button>
         </form>
       ) : null}
@@ -570,7 +607,7 @@ export function BookingsManager() {
                         href={`/admin/reservas/${booking.id}/datos`}
                         className="rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-primary"
                       >
-                        Datos viajeros
+                        Huéspedes
                       </Link>
                       <Link
                         href={`/admin/reservas/${booking.id}`}
