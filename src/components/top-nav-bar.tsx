@@ -87,14 +87,20 @@ export function TopNavBar({ content, active, displayCurrency = "COP" }: TopNavBa
       />
 
       <nav className="relative z-[1] mx-auto flex h-14 max-w-7xl items-center justify-between gap-4 px-4 sm:h-16 md:px-8 xl:px-16">
-          <Link href="/" className="flex min-w-0 shrink-0 items-center transition-opacity hover:opacity-85">
+          <Link
+            href="/"
+            className="flex min-w-0 shrink-0 items-center gap-2.5 transition-opacity hover:opacity-85 sm:gap-3"
+          >
             <BrandLogo
               name={content.brand.name}
               logoUrl={content.brand.logoUrl}
-              className="h-10 w-auto max-w-[140px] sm:max-w-[160px] lg:h-11 lg:max-w-[180px]"
-              width={180}
-              height={72}
+              className="h-9 w-9 shrink-0 sm:h-10 sm:w-10"
+              width={40}
+              height={40}
             />
+            <span className="truncate text-base font-extrabold tracking-tight text-primary sm:text-lg">
+              {content.brand.name}
+            </span>
           </Link>
 
         <div className="hidden items-center gap-5 lg:flex xl:gap-6">

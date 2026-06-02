@@ -80,3 +80,7 @@ body {
   outline: none;
   background: transparent;
 }
+
+body:has(#admin-mobile-nav-toggle:checked) {
+  overflow: hidden;
+}

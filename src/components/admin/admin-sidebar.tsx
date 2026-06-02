@@ -3,31 +3,13 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { AdminLogoutButton } from "@/components/admin/admin-logout-button";
-import type { AdminNavItem } from "@/lib/admin/types";
-
-const navItems: AdminNavItem[] = [
-  { label: "Dashboard", href: "/admin", icon: "dashboard", match: "exact" },
-  { label: "Reservas", href: "/admin/reservas", icon: "calendar_month", match: "startsWith" },
-  { label: "Pagos", href: "/admin/pagos", icon: "payments", match: "startsWith" },
-  { label: "Promociones", href: "/admin/promociones", icon: "sell", match: "startsWith" },
-  { label: "Tours", href: "/admin/tours", icon: "explore", match: "startsWith" },
-  { label: "WhatsApp", href: "/admin/whatsapp", icon: "forum", match: "startsWith" },
-  { label: "Configuración", href: "/admin/configuracion", icon: "settings", match: "startsWith" },
-];
-
-function isActive(pathname: string, item: AdminNavItem) {
-  if (item.match === "exact") {
-    return pathname === item.href;
-  }
-
-  return pathname.startsWith(item.href);
-}
+import { adminNavItems, isAdminNavActive } from "@/lib/admin/nav-items";
 
 export function AdminSidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="hidden w-[236px] flex-col bg-primary px-4 py-6 text-white shadow-2xl lg:flex">
+    <aside className="hidden w-[236px] shrink-0 flex-col bg-primary px-4 py-6 text-white shadow-2xl lg:flex">
       <div className="px-2">
         <Link href="/admin" className="mb-1 block">
           <p className="text-[18px] font-extrabold tracking-tight text-secondary-container">HI TRAVEL</p>
@@ -36,8 +18,8 @@ export function AdminSidebar() {
       </div>
 
       <nav className="mt-10 space-y-2">
-        {navItems.map((item) => {
-          const active = isActive(pathname, item);
+        {adminNavItems.map((item) => {
+          const active = isAdminNavActive(pathname, item);
           return (
             <Link
               key={item.href}

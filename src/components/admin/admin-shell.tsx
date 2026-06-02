@@ -2,6 +2,7 @@
 
 import type { ReactNode } from "react";
 import { AdminFetchBootstrap } from "@/components/admin/admin-fetch-bootstrap";
+import { AdminMobileNav } from "@/components/admin/admin-mobile-nav";
 import { AdminSidebar } from "@/components/admin/admin-sidebar";
 import { AdminTopbar } from "@/components/admin/admin-topbar";
 import { useAdminSessionGuard } from "@/hooks/use-admin-session-guard";
@@ -18,13 +19,14 @@ export function AdminShell({ children, searchPlaceholder, userEmail, userName, u
   useAdminSessionGuard();
 
   return (
-    <div className="min-h-screen bg-background text-on-surface">
+    <div className="min-h-screen overflow-x-hidden bg-background text-on-surface">
       <AdminFetchBootstrap />
-      <div className="flex min-h-screen">
+      <AdminMobileNav />
+      <div className="flex min-h-screen min-w-0">
         <AdminSidebar />
-        <div className="flex min-h-screen flex-1 flex-col">
+        <div className="flex min-h-screen min-w-0 flex-1 flex-col">
           <AdminTopbar placeholder={searchPlaceholder} userEmail={userEmail} userName={userName} userRole={userRole} />
-          <main className="flex-1 px-6 py-8 lg:px-10">{children}</main>
+          <main className="min-w-0 flex-1 px-4 py-6 sm:px-6 lg:px-10 lg:py-8">{children}</main>
         </div>
       </div>
     </div>

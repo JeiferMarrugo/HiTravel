@@ -27,8 +27,9 @@ type DashboardSalesChartProps = {
 
 export function DashboardSalesChart({ data }: DashboardSalesChartProps) {
   return (
-    <ResponsiveContainer width="100%" height={320}>
-      <AreaChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+    <div className="h-[240px] w-full min-w-0 max-w-full sm:h-[320px]">
+      <ResponsiveContainer width="100%" height="100%">
+      <AreaChart data={data} margin={{ top: 8, right: 4, left: -8, bottom: 0 }}>
         <defs>
           <linearGradient id="salesGradient" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor={CHART_PRIMARY} stopOpacity={0.25} />
@@ -74,7 +75,8 @@ export function DashboardSalesChart({ data }: DashboardSalesChartProps) {
           name="sales"
         />
       </AreaChart>
-    </ResponsiveContainer>
+      </ResponsiveContainer>
+    </div>
   );
 }
 
@@ -84,8 +86,9 @@ type DashboardToursChartProps = {
 
 export function DashboardToursChart({ data }: DashboardToursChartProps) {
   return (
-    <ResponsiveContainer width="100%" height={320}>
-      <BarChart data={data} layout="vertical" margin={{ top: 8, right: 16, left: 8, bottom: 0 }}>
+    <div className="h-[240px] w-full min-w-0 max-w-full sm:h-[320px]">
+      <ResponsiveContainer width="100%" height="100%">
+      <BarChart data={data} layout="vertical" margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
         <CartesianGrid stroke={CHART_GRID} strokeDasharray="4 4" horizontal={false} />
         <XAxis
           type="number"
@@ -105,8 +108,8 @@ export function DashboardToursChart({ data }: DashboardToursChartProps) {
         <YAxis
           type="category"
           dataKey="tour"
-          width={130}
-          tick={{ fill: "#43474f", fontSize: 11 }}
+          width={72}
+          tick={{ fill: "#43474f", fontSize: 10 }}
           axisLine={false}
           tickLine={false}
         />
@@ -123,7 +126,8 @@ export function DashboardToursChart({ data }: DashboardToursChartProps) {
         />
         <Bar dataKey="revenue" fill={CHART_ACCENT} radius={[0, 10, 10, 0]} barSize={18} />
       </BarChart>
-    </ResponsiveContainer>
+      </ResponsiveContainer>
+    </div>
   );
 }
 
@@ -133,7 +137,8 @@ type DashboardChannelsChartProps = {
 
 export function DashboardChannelsChart({ data }: DashboardChannelsChartProps) {
   return (
-    <ResponsiveContainer width="100%" height={280}>
+    <div className="mx-auto h-[220px] w-full min-w-0 max-w-full sm:h-[280px]">
+      <ResponsiveContainer width="100%" height="100%">
       <PieChart>
         <Pie data={data} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={62} outerRadius={96} paddingAngle={4}>
           {data.map((entry) => (
@@ -149,6 +154,7 @@ export function DashboardChannelsChart({ data }: DashboardChannelsChartProps) {
           formatter={(value) => [`${typeof value === "number" ? value : Number(value ?? 0)}%`, "Participación"]}
         />
       </PieChart>
-    </ResponsiveContainer>
+      </ResponsiveContainer>
+    </div>
   );
 }

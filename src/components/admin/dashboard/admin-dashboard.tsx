@@ -45,23 +45,25 @@ export function AdminDashboard({ initialMetrics = null }: { initialMetrics?: Das
   const pendingItems = metrics?.pendingItems ?? [];
 
   return (
-    <div className="w-full space-y-8">
+    <div className="w-full min-w-0 max-w-full space-y-6 sm:space-y-8">
       <section className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
-        <div>
-          <h1 className="text-[32px] font-extrabold leading-[40px] text-primary">Dashboard comercial</h1>
-          <p className="mt-2 text-lg capitalize text-on-surface-variant">{formatTodayLabel()}</p>
+        <div className="min-w-0">
+          <h1 className="text-2xl font-extrabold leading-tight text-primary sm:text-[32px] sm:leading-[40px]">
+            Dashboard comercial
+          </h1>
+          <p className="mt-2 text-base capitalize text-on-surface-variant sm:text-lg">{formatTodayLabel()}</p>
         </div>
-        <div className="flex flex-wrap gap-3">
+        <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
           <Link
             href="/admin/reservas"
-            className="inline-flex items-center gap-2 rounded-2xl bg-primary px-5 py-3 text-sm font-semibold text-white"
+            className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-2xl bg-primary px-5 py-3 text-sm font-semibold text-white"
           >
             <span className="material-symbols-outlined text-[18px]">add</span>
             Nueva reserva
           </Link>
           <Link
             href="/admin/tarifas"
-            className="inline-flex items-center gap-2 rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-primary coastal-shadow"
+            className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-primary coastal-shadow"
           >
             <span className="material-symbols-outlined text-[18px]">download</span>
             Exportar reporte
@@ -75,11 +77,11 @@ export function AdminDashboard({ initialMetrics = null }: { initialMetrics?: Das
         ))}
       </section>
 
-      <section className="grid gap-6 xl:grid-cols-[1.4fr_0.6fr]">
-        <article className="rounded-[2rem] bg-white p-6 coastal-shadow">
-          <div className="mb-6 flex items-center justify-between gap-4">
-            <div>
-              <h2 className="text-[22px] font-semibold text-primary">Ventas mensuales</h2>
+      <section className="grid min-w-0 gap-6 xl:grid-cols-[1.4fr_0.6fr]">
+        <article className="min-w-0 overflow-hidden rounded-[2rem] bg-white p-4 coastal-shadow sm:p-6">
+          <div className="mb-4 flex flex-col gap-3 sm:mb-6 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+            <div className="min-w-0">
+              <h2 className="text-lg font-semibold text-primary sm:text-[22px]">Ventas mensuales</h2>
               <p className="mt-1 text-sm text-on-surface-variant">Evolución de ingresos y reservas en los últimos 6 meses</p>
             </div>
             {salesGrowthLabel ? (
@@ -91,9 +93,9 @@ export function AdminDashboard({ initialMetrics = null }: { initialMetrics?: Das
           <DashboardSalesChart data={monthlySales} />
         </article>
 
-        <article className="rounded-[2rem] bg-white p-6 coastal-shadow">
+        <article className="min-w-0 overflow-hidden rounded-[2rem] bg-white p-4 coastal-shadow sm:p-6">
           <div className="mb-2">
-            <h2 className="text-[22px] font-semibold text-primary">Canales de reserva</h2>
+            <h2 className="text-lg font-semibold text-primary sm:text-[22px]">Canales de reserva</h2>
             <p className="mt-1 text-sm text-on-surface-variant">Distribución de ventas por origen</p>
           </div>
           <DashboardChannelsChart data={bookingChannels} />
@@ -111,19 +113,19 @@ export function AdminDashboard({ initialMetrics = null }: { initialMetrics?: Das
         </article>
       </section>
 
-      <section className="grid gap-6 xl:grid-cols-2">
-        <article className="rounded-[2rem] bg-white p-6 coastal-shadow">
-          <div className="mb-6">
-            <h2 className="text-[22px] font-semibold text-primary">Ingresos por tour</h2>
+      <section className="grid min-w-0 gap-6 xl:grid-cols-2">
+        <article className="min-w-0 overflow-hidden rounded-[2rem] bg-white p-4 coastal-shadow sm:p-6">
+          <div className="mb-4 sm:mb-6">
+            <h2 className="text-lg font-semibold text-primary sm:text-[22px]">Ingresos por tour</h2>
             <p className="mt-1 text-sm text-on-surface-variant">Top experiencias del mes por facturación</p>
           </div>
           <DashboardToursChart data={tourRevenueMetrics} />
         </article>
 
-        <article className="rounded-[2rem] bg-white p-6 coastal-shadow">
-          <div className="mb-6 flex items-center justify-between">
-            <div>
-              <h2 className="text-[22px] font-semibold text-primary">Mejores clientes</h2>
+        <article className="min-w-0 overflow-hidden rounded-[2rem] bg-white p-4 coastal-shadow sm:p-6">
+          <div className="mb-4 flex items-center justify-between gap-3 sm:mb-6">
+            <div className="min-w-0">
+              <h2 className="text-lg font-semibold text-primary sm:text-[22px]">Mejores clientes</h2>
               <p className="mt-1 text-sm text-on-surface-variant">Clientes con mayor valor acumulado</p>
             </div>
             <span className="material-symbols-outlined text-on-surface-variant">emoji_events</span>
@@ -166,10 +168,10 @@ export function AdminDashboard({ initialMetrics = null }: { initialMetrics?: Das
         </article>
       </section>
 
-      <article className="rounded-[2rem] bg-white coastal-shadow">
-        <div className="flex items-center justify-between border-b border-outline-variant/15 px-6 py-5">
-          <div>
-            <h2 className="text-[22px] font-semibold text-primary">Ventas recientes</h2>
+      <article className="min-w-0 overflow-hidden rounded-[2rem] bg-white coastal-shadow">
+        <div className="flex flex-col gap-3 border-b border-outline-variant/15 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6 sm:py-5">
+          <div className="min-w-0">
+            <h2 className="text-lg font-semibold text-primary sm:text-[22px]">Ventas recientes</h2>
             <p className="mt-1 text-sm text-on-surface-variant">Últimas transacciones registradas en el sistema</p>
           </div>
           <Link href="/admin/reservas" className="text-sm font-semibold text-primary">
