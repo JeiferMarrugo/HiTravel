@@ -3,6 +3,7 @@ import type { AdminNavItem } from "@/lib/admin/types";
 export const adminNavItems: AdminNavItem[] = [
   { label: "Dashboard", href: "/admin", icon: "dashboard", match: "exact" },
   { label: "Reservas", href: "/admin/reservas", icon: "calendar_month", match: "startsWith" },
+  { label: "Contactos", href: "/admin/contactos", icon: "mail", match: "startsWith" },
   { label: "Pagos", href: "/admin/pagos", icon: "payments", match: "startsWith" },
   { label: "Promociones", href: "/admin/promociones", icon: "sell", match: "startsWith" },
   { label: "Tours", href: "/admin/tours", icon: "explore", match: "startsWith" },

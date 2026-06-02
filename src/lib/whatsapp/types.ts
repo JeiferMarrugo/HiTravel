@@ -1,6 +1,7 @@
 export type WhatsAppTemplateKey =
   | "booking_confirmed"
   | "website_booking_received"
+  | "contact_form_client_reply"
   | "checkin_reminder"
   | "post_experience_review";
 
@@ -53,6 +54,10 @@ export type UpdateWhatsAppConfigInput = {
 
 export const TEMPLATE_PLACEHOLDERS = [
   "{{customer_name}}",
+  "{{full_name}}",
+  "{{email}}",
+  "{{phone}}",
+  "{{message}}",
   "{{booking_code}}",
   "{{tour_name}}",
   "{{checkin_date}}",

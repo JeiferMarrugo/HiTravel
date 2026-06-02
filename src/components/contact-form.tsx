@@ -33,7 +33,10 @@ export function ContactForm() {
         throw new Error(payload.error ?? "No fue posible enviar tu mensaje.");
       }
 
-      notify.success(payload.message ?? "Mensaje enviado correctamente.");
+      notify.success(
+        payload.message ??
+          "¡Gracias! Te enviamos un WhatsApp con el resumen de tu solicitud.",
+      );
       setFormData(initialFormData);
     } catch (error) {
       notify.error(error instanceof Error ? error.message : "No fue posible enviar tu mensaje.");

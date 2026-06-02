@@ -17,6 +17,13 @@ const sessionId = process.env.OPENWA_SESSION_ID?.trim() || null;
 
 const templates = [
   {
+    template_key: "contact_form_client_reply",
+    name: "Confirmación formulario de contacto",
+    description: "Respuesta automática al cliente que escribe desde la página Contáctanos.",
+    body:
+      "Hola {{customer_name}},\n\n¡Gracias por contactar a *HI TRAVEL*! Recibimos tu mensaje y muy pronto uno de nuestros asesores te atenderá de forma personalizada.\n\n*Resumen de tu solicitud*\n📧 Correo: {{email}}\n📱 Teléfono: {{phone}}\n\n💬 *Lo que nos contaste:*\n«{{message}}»\n\nSi deseas agilizar tu cotización, responde a este chat con la fecha tentativa de viaje y cuántas personas viajarían.\n\nEstamos listos para ayudarte a vivir experiencias inolvidables en el Caribe colombiano.\n\nCon cariño,\n*Equipo HI TRAVEL* 🌊",
+  },
+  {
     template_key: "website_booking_received",
     name: "Solicitud recibida (web)",
     description:

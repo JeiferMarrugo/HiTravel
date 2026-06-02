@@ -11,6 +11,11 @@ export const WHATSAPP_TEMPLATE_OPTIONS: Array<{
     description: "Al reservar desde la página pública; gestión por WhatsApp.",
   },
   {
+    key: "contact_form_client_reply",
+    label: "Confirmación formulario contacto",
+    description: "Respuesta automática al cliente en la página Contáctanos.",
+  },
+  {
     key: "booking_confirmed",
     label: "Reserva confirmada",
     description: "Confirma la reserva al cliente.",
