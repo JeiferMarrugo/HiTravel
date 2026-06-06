@@ -95,9 +95,9 @@ export const defaultSiteContent: SiteContent = {
     storyParagraph2:
       "Por eso construimos una marca enfocada en claridad, hospitalidad y selección cuidadosa de experiencias en Cartagena, Barú, Rosario y Tayrona. Queremos que cada interacción, desde la primera visita al sitio hasta el regreso del tour, transmita seguridad y deseo de viajar.",
     stats: [
-      { value: "4.9/5", label: "calificación promedio" },
-      { value: "+1.200", label: "viajeros atendidos" },
-      { value: "24/7", label: "soporte por WhatsApp" },
+      { value: "0/5", label: "calificación promedio" },
+      { value: "0", label: "viajeros atendidos" },
+      { value: "0", label: "soporte por WhatsApp" },
     ],
     valuesTitle: "Lo que nos define",
     valuesSubtitle:

@@ -2,14 +2,19 @@ import Image from "next/image";
 import Link from "next/link";
 import { HomeFooter, TopNav, WhatsappFab } from "@/components/site-chrome";
 import { PUBLIC_PAGE_SHELL } from "@/lib/public-page-layout";
+import { formatAboutStats, getAboutPageLiveStats } from "@/lib/public/about-stats";
 import { getVisitorPricingContext } from "@/lib/pricing/visitor-currency";
 import { isUploadedSiteImage } from "@/lib/site-content/utils";
 
 export const dynamic = "force-dynamic";
 
 export default async function NosotrosPage() {
-  const { content, displayCurrency } = await getVisitorPricingContext();
+  const [{ content, displayCurrency }, liveStats] = await Promise.all([
+    getVisitorPricingContext(),
+    getAboutPageLiveStats(),
+  ]);
   const { about } = content;
+  const aboutStats = formatAboutStats(liveStats, about.stats);
 
   return (
     <>
@@ -55,7 +60,7 @@ export default async function NosotrosPage() {
           </div>
 
           <div className="grid gap-4 sm:grid-cols-3 md:grid-cols-1">
-            {about.stats.map((stat) => (
+            {aboutStats.map((stat) => (
               <article key={stat.label} className="rounded-[2rem] bg-white p-8 coastal-shadow">
                 <p className="text-4xl font-extrabold text-primary">{stat.value}</p>
                 <p className="mt-3 text-sm uppercase tracking-[0.2em] text-on-surface-variant">{stat.label}</p>
