@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useId, useRef, useState } from "react";
 import { BrandLogo } from "@/components/brand-logo";
 import { CurrencySwitcher } from "@/components/currency-switcher";
+import { PUBLIC_PAGE_SHELL } from "@/lib/public-page-layout";
 import type { DisplayCurrency } from "@/lib/pricing/visitor-currency";
 import type { SiteContent } from "@/lib/site-content/types";
 
@@ -86,7 +87,7 @@ export function TopNavBar({ content, active, displayCurrency = "COP" }: TopNavBa
         aria-hidden
       />
 
-      <nav className="relative z-[1] mx-auto flex h-14 max-w-7xl items-center justify-between gap-4 px-4 sm:h-16 md:px-8 xl:px-16">
+      <nav className={`relative z-[1] flex h-14 items-center justify-between gap-4 sm:h-16 ${PUBLIC_PAGE_SHELL}`}>
           <Link
             href="/"
             className="flex min-w-0 shrink-0 items-center gap-2.5 transition-opacity hover:opacity-85 sm:gap-3"
@@ -155,9 +156,9 @@ export function TopNavBar({ content, active, displayCurrency = "COP" }: TopNavBa
         role="dialog"
         aria-modal="true"
         aria-label="Menú de navegación"
-        className="fixed inset-x-0 top-14 z-[10052] hidden max-h-[calc(100dvh-3.5rem)] overflow-y-auto border-b border-neutral-100 bg-white px-4 py-5 shadow-lg peer-checked/menu:block lg:hidden"
+        className="fixed inset-x-0 top-14 z-[10052] hidden max-h-[calc(100dvh-3.5rem)] overflow-y-auto border-b border-neutral-100 bg-white py-5 shadow-lg peer-checked/menu:block lg:hidden"
       >
-        <nav className="mx-auto flex max-w-7xl flex-col gap-1">
+        <nav className={`flex flex-col gap-1 ${PUBLIC_PAGE_SHELL}`}>
           {navItems.map((item) => {
             const isActive = item.key === active;
             return (

@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { BrandLogo } from "@/components/brand-logo";
 import { TopNavBar } from "@/components/top-nav-bar";
+import { PUBLIC_PAGE_SHELL } from "@/lib/public-page-layout";
 import devLogo from "@/public/images/logo_dev.jpeg";
 import type { DisplayCurrency } from "@/lib/pricing/visitor-currency";
 import type { SiteContent } from "@/lib/site-content/types";
@@ -16,8 +17,8 @@ type SiteChromeProps = {
 
 function DeveloperCreditFooter() {
   return (
-    <div className="border-t border-neutral-200 bg-white px-4 py-4 md:px-16">
-      <div className="mx-auto flex max-w-7xl items-center justify-center gap-3">
+    <div className={`border-t border-neutral-200 bg-white py-4 ${PUBLIC_PAGE_SHELL}`}>
+      <div className="flex items-center justify-center gap-3">
         <span className="text-[11px] font-semibold uppercase tracking-[0.28em] text-neutral-500">Elaborado por</span>
         <a
           href="https://example.com"
@@ -54,8 +55,8 @@ export function HomeFooter({ content }: { content: SiteContent }) {
   const { social, footer, brand } = content;
   return (
     <>
-      <footer className="w-full border-t border-outline-variant/20 bg-primary px-4 py-20 md:px-16">
-        <div className="mx-auto flex max-w-7xl flex-col justify-between gap-10 md:flex-row">
+      <footer className={`w-full border-t border-outline-variant/20 bg-primary py-20 ${PUBLIC_PAGE_SHELL}`}>
+        <div className="flex flex-col justify-between gap-10 md:flex-row">
           <div className="max-w-sm space-y-6">
             <BrandLogo
               name={brand.name}
@@ -119,8 +120,8 @@ export function ToursFooter({ content }: { content: SiteContent }) {
   const { social, footer, brand } = content;
   return (
     <>
-      <footer className="w-full bg-primary px-4 py-20 md:px-16">
-        <div className="mx-auto flex max-w-7xl flex-col justify-between gap-10 md:flex-row">
+      <footer className={`w-full bg-primary py-20 ${PUBLIC_PAGE_SHELL}`}>
+        <div className="flex flex-col justify-between gap-10 md:flex-row">
           <div className="flex max-w-xs flex-col gap-6">
             <div className="text-3xl font-bold text-secondary-container">{brand.name}</div>
             <p className="text-sm leading-7 text-white/80">{footer.toursDescription}</p>
@@ -157,8 +158,8 @@ export function ContactFooter({ content }: { content: SiteContent }) {
   const { social, footer, brand } = content;
   return (
     <>
-      <footer className="w-full border-t border-outline-variant/20 bg-primary px-4 py-20 md:px-16">
-        <div className="mx-auto flex max-w-7xl flex-col justify-between gap-10 md:flex-row">
+      <footer className={`w-full border-t border-outline-variant/20 bg-primary py-20 ${PUBLIC_PAGE_SHELL}`}>
+        <div className="flex flex-col justify-between gap-10 md:flex-row">
           <div className="space-y-4">
             <div className="text-3xl font-bold text-secondary-container">{brand.name}</div>
             <p className="max-w-xs text-sm leading-7 text-white/80">{footer.contactCopyright}</p>
@@ -195,8 +196,8 @@ export function DetailFooter({ content }: { content: SiteContent }) {
   const { social, footer, brand } = content;
   return (
     <>
-      <footer className="w-full border-t border-outline-variant/20 bg-primary px-4 py-20 md:px-16">
-        <div className="mx-auto flex max-w-7xl flex-col justify-between gap-10 md:flex-row">
+      <footer className={`w-full border-t border-outline-variant/20 bg-primary py-20 ${PUBLIC_PAGE_SHELL}`}>
+        <div className="flex flex-col justify-between gap-10 md:flex-row">
           <div className="md:w-1/3">
             <h2 className="mb-6 text-3xl font-bold text-secondary-container">{brand.name}</h2>
             <p className="mb-8 text-sm leading-7 text-white/80">{footer.detailDescription}</p>

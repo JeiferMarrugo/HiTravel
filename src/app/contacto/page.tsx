@@ -1,6 +1,7 @@
 import Image from "next/image";
 import { ContactForm } from "@/components/contact-form";
 import { ContactFooter, TopNav, WhatsappFab } from "@/components/site-chrome";
+import { PUBLIC_PAGE_SHELL } from "@/lib/public-page-layout";
 import { getVisitorPricingContext } from "@/lib/pricing/visitor-currency";
 import { isUploadedSiteImage } from "@/lib/site-content/utils";
 
@@ -15,7 +16,7 @@ export default async function ContactPage() {
       <TopNav content={content} active="contact" displayCurrency={displayCurrency} />
 
       <main className="pb-20 pt-32">
-        <section className="mx-auto mb-16 max-w-7xl px-4 md:px-16">
+        <section className={`${PUBLIC_PAGE_SHELL} mb-16`}>
           <div className="relative h-[400px] overflow-hidden rounded-xl coastal-shadow">
             <Image
               src={contactPage.heroImageUrl}
@@ -37,7 +38,7 @@ export default async function ContactPage() {
           </div>
         </section>
 
-        <section className="mx-auto grid max-w-7xl grid-cols-1 gap-6 px-4 md:px-16 lg:grid-cols-12">
+        <section className={`${PUBLIC_PAGE_SHELL} grid grid-cols-1 gap-6 lg:grid-cols-12`}>
           <div className="coastal-shadow rounded-xl border border-outline-variant/20 bg-surface-container-lowest p-8 md:p-12 lg:col-span-7">
             <h2 className="mb-8 text-[32px] font-bold leading-[40px] text-primary">{contactPage.formTitle}</h2>
             <ContactForm />

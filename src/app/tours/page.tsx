@@ -1,16 +1,28 @@
 import { TourCard } from "@/components/tour-card";
+import { ToursFilters } from "@/components/tours-filters";
+import { TOURS_PAGE_SIZE, ToursPagination } from "@/components/tours-pagination";
 import { TopNav, ToursFooter, WhatsappFab } from "@/components/site-chrome";
 import { getPublicTours } from "@/lib/catalog/public";
+import { PUBLIC_PAGE_SHELL } from "@/lib/public-page-layout";
 import { getVisitorPricingContext } from "@/lib/pricing/visitor-currency";
+import {
+  filterPublicTours,
+  formatFilterPrice,
+  getTourPriceBounds,
+} from "@/lib/tours/filter-tours";
+import { parseCategoryParam, parseMaxPriceParam } from "@/lib/tours/tours-url";
 
 export const dynamic = "force-dynamic";
 
 type ToursPageProps = {
   searchParams?: Promise<{
     adultos?: string;
+    categoria?: string;
     destino?: string;
     fecha?: string;
     ninos?: string;
+    page?: string;
+    precioMax?: string;
   }>;
 };
 
@@ -20,100 +32,95 @@ export default async function ToursPage({ searchParams }: ToursPageProps) {
   const tours = await getPublicTours();
   const { toursPage } = content;
   const destinationFilter = params.destino?.trim() ?? "";
+  const selectedCategories = parseCategoryParam(params.categoria);
+  const maxPrice = parseMaxPriceParam(params.precioMax);
   const adults = Number(params.adultos ?? "0");
   const children = Number(params.ninos ?? "0");
-  const passengerSummary = [adults > 0 ? `${adults} adulto${adults === 1 ? "" : "s"}` : null, children > 0 ? `${children} niño${children === 1 ? "" : "s"}` : null]
+  const passengerSummary = [
+    adults > 0 ? `${adults} adulto${adults === 1 ? "" : "s"}` : null,
+    children > 0 ? `${children} niño${children === 1 ? "" : "s"}` : null,
+  ]
     .filter(Boolean)
     .join(", ");
-  const categories = [
-    "Todos",
-    ...new Set(tours.map((tour) => tour.category).filter(Boolean)),
-  ];
-  const filteredTours = destinationFilter
-    ? tours.filter(
-        (tour) =>
-          tour.country.toLowerCase().includes(destinationFilter.toLowerCase()) ||
-          tour.location.toLowerCase().includes(destinationFilter.toLowerCase()),
-      )
-    : tours;
+
+  const categories = [...new Set(tours.map((tour) => tour.category).filter(Boolean))].sort((a, b) =>
+    a.localeCompare(b, "es"),
+  );
+  const priceBounds = getTourPriceBounds(tours, displayCurrency, usdCopRate);
+
+  const filteredTours = filterPublicTours(
+    tours,
+    {
+      destination: destinationFilter,
+      categories: selectedCategories,
+      maxPrice,
+    },
+    displayCurrency,
+    usdCopRate,
+  );
+
+  const totalPages = Math.max(1, Math.ceil(filteredTours.length / TOURS_PAGE_SIZE));
+  const requestedPage = Math.max(1, Number(params.page ?? "1") || 1);
+  const currentPage = Math.min(requestedPage, totalPages);
+  const pageOffset = (currentPage - 1) * TOURS_PAGE_SIZE;
+  const paginatedTours = filteredTours.slice(pageOffset, pageOffset + TOURS_PAGE_SIZE);
+
+  const paginationParams = {
+    destino: params.destino,
+    adultos: params.adultos,
+    ninos: params.ninos,
+    fecha: params.fecha,
+    categoria: params.categoria,
+    precioMax: params.precioMax,
+  };
+
+  const activeFilterBadges = [
+    destinationFilter ? `Destino: ${destinationFilter}` : null,
+    selectedCategories.length ? `Categoría: ${selectedCategories.join(", ")}` : null,
+    maxPrice !== null ? `Hasta ${formatFilterPrice(maxPrice, displayCurrency)}` : null,
+    passengerSummary ? `Pasajeros: ${passengerSummary}` : null,
+  ].filter(Boolean);
 
   return (
     <>
       <TopNav content={content} active="tours" displayCurrency={displayCurrency} />
 
-      <main className="mx-auto max-w-7xl px-4 pb-20 pt-24 md:px-16">
+      <main className={`${PUBLIC_PAGE_SHELL} pb-20 pt-24`}>
         <header className="mb-12">
           <h1 className="mb-4 text-[36px] font-extrabold leading-[44px] text-primary md:text-[48px] md:leading-[56px]">
             Descubre tu próxima aventura
           </h1>
-          <p className="max-w-2xl text-lg leading-7 text-on-surface-variant">
+          <p className="max-w-3xl text-lg leading-7 text-on-surface-variant">
             Desde las aguas cristalinas de Barú hasta los senderos de Tayrona, explora el Caribe como nunca antes.
           </p>
-          {destinationFilter || passengerSummary ? (
+          {activeFilterBadges.length ? (
             <div className="mt-4 flex flex-wrap gap-3">
-              {destinationFilter ? (
-                <div className="inline-flex rounded-full bg-blue-50 px-4 py-2 text-sm font-medium text-primary">
-                  Filtrando por destino: {destinationFilter}
+              {activeFilterBadges.map((badge) => (
+                <div
+                  key={badge}
+                  className="inline-flex rounded-full bg-blue-50 px-4 py-2 text-sm font-medium text-primary"
+                >
+                  {badge}
                 </div>
-              ) : null}
-              {passengerSummary ? (
-                <div className="inline-flex rounded-full bg-secondary-container/40 px-4 py-2 text-sm font-medium text-primary">
-                  Pasajeros: {passengerSummary}
-                </div>
-              ) : null}
+              ))}
             </div>
           ) : null}
         </header>
 
-        <div className="flex flex-col gap-6 md:flex-row">
-          <aside className="w-full flex-shrink-0 md:w-64">
-            <div className="coastal-mist-shadow sticky top-28 rounded-xl bg-surface-container-low p-6">
-              <h3 className="mb-6 text-[22px] font-semibold text-primary">Filtros</h3>
-
-              <div className="mb-8">
-                <span className="mb-4 block text-sm font-semibold uppercase tracking-[0.2em] text-outline">Categoría</span>
-                <div className="space-y-3">
-                  {categories.map((category, index) => (
-                    <label key={category} className="group flex cursor-pointer items-center gap-3">
-                      <input
-                        type="checkbox"
-                        defaultChecked={index === 0}
-                        className="h-5 w-5 rounded border-outline-variant text-primary focus:ring-primary"
-                      />
-                      <span className="text-base text-on-surface-variant group-hover:text-primary">{category}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-
-              <div className="mb-8">
-                <span className="mb-4 block text-sm font-semibold uppercase tracking-[0.2em] text-outline">Rango de precio</span>
-                <input
-                  type="range"
-                  min="0"
-                  max="1000"
-                  defaultValue="500"
-                  className="h-2 w-full cursor-pointer appearance-none rounded-lg bg-surface-variant accent-primary"
-                />
-                <div className="mt-2 flex justify-between">
-                  <span className="text-sm text-on-surface-variant">$0</span>
-                  <span className="text-sm text-on-surface-variant">$1.000+</span>
-                </div>
-              </div>
-
-              <button
-                type="button"
-                className="w-full rounded-lg bg-surface-container-high px-4 py-3 text-sm font-semibold text-primary transition-colors hover:bg-surface-variant"
-              >
-                Limpiar filtros
-              </button>
-            </div>
+        <div className="flex flex-col gap-6 lg:flex-row">
+          <aside className="w-full shrink-0 lg:w-72 xl:w-80">
+            <ToursFilters
+              categories={categories}
+              priceMin={priceBounds.min}
+              priceMax={priceBounds.max}
+              displayCurrency={displayCurrency}
+            />
           </aside>
 
-          <div className="flex-grow">
-            {filteredTours.length ? (
-              <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-                {filteredTours.map((tour) => (
+          <div className="min-w-0 flex-1">
+            {paginatedTours.length ? (
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
+                {paginatedTours.map((tour) => (
                   <TourCard
                     key={tour.slug}
                     tour={tour}
@@ -133,27 +140,11 @@ export default async function ToursPage({ searchParams }: ToursPageProps) {
               </div>
             )}
 
-            {filteredTours.length ? (
-              <div className="mt-12 flex items-center justify-center gap-4">
-                <button type="button" className="rounded-full bg-surface-container p-2 text-primary hover:bg-surface-variant">
-                  <span className="material-symbols-outlined">chevron_left</span>
-                </button>
-                <div className="flex gap-2">
-                  <button type="button" className="h-10 w-10 rounded-full bg-primary text-sm font-semibold text-on-primary">
-                    1
-                  </button>
-                  <button type="button" className="h-10 w-10 rounded-full bg-surface-container text-sm font-semibold text-primary hover:bg-surface-variant">
-                    2
-                  </button>
-                  <button type="button" className="h-10 w-10 rounded-full bg-surface-container text-sm font-semibold text-primary hover:bg-surface-variant">
-                    3
-                  </button>
-                </div>
-                <button type="button" className="rounded-full bg-surface-container p-2 text-primary hover:bg-surface-variant">
-                  <span className="material-symbols-outlined">chevron_right</span>
-                </button>
-              </div>
-            ) : null}
+            <ToursPagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              searchParams={paginationParams}
+            />
           </div>
         </div>
       </main>

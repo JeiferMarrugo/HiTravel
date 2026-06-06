@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { HomeFooter, TopNav, WhatsappFab } from "@/components/site-chrome";
+import { PUBLIC_PAGE_SHELL } from "@/lib/public-page-layout";
 import { getVisitorPricingContext } from "@/lib/pricing/visitor-currency";
 import { isUploadedSiteImage } from "@/lib/site-content/utils";
 
@@ -15,7 +16,7 @@ export default async function NosotrosPage() {
       <TopNav content={content} active="about" displayCurrency={displayCurrency} />
 
       <main className="pb-20 pt-24">
-        <section className="mx-auto max-w-7xl px-4 py-10 md:px-16">
+        <section className={`${PUBLIC_PAGE_SHELL} py-10`}>
           <div className="relative overflow-hidden rounded-[2rem] coastal-shadow">
             <div className="relative h-[420px]">
               <Image
@@ -43,7 +44,7 @@ export default async function NosotrosPage() {
           </div>
         </section>
 
-        <section className="mx-auto grid max-w-7xl gap-8 px-4 py-10 md:grid-cols-[1.05fr_0.95fr] md:px-16">
+        <section className={`${PUBLIC_PAGE_SHELL} grid gap-8 py-10 md:grid-cols-[1.05fr_0.95fr]`}>
           <div className="space-y-6">
             <span className="rounded-full bg-tertiary-container/10 px-4 py-1.5 text-sm font-semibold text-on-tertiary-container">
               {about.storyBadge}
@@ -64,7 +65,7 @@ export default async function NosotrosPage() {
         </section>
 
         <section className="bg-surface-container py-20">
-          <div className="mx-auto max-w-7xl px-4 md:px-16">
+          <div className={PUBLIC_PAGE_SHELL}>
             <div className="mb-12 text-center">
               <h2 className="text-[32px] font-bold leading-[40px] text-primary">{about.valuesTitle}</h2>
               <p className="mx-auto mt-4 max-w-2xl text-on-surface-variant">{about.valuesSubtitle}</p>
@@ -84,7 +85,7 @@ export default async function NosotrosPage() {
           </div>
         </section>
 
-        <section className="mx-auto max-w-7xl px-4 py-20 md:px-16">
+        <section className={`${PUBLIC_PAGE_SHELL} py-20`}>
           <div className="grid gap-8 md:grid-cols-2">
             <div className="rounded-[2rem] bg-primary p-10 text-white">
               <span className="text-sm font-semibold uppercase tracking-[0.2em] text-secondary-container">
@@ -100,7 +101,7 @@ export default async function NosotrosPage() {
           </div>
         </section>
 
-        <section className="mx-auto max-w-7xl px-4 pb-6 md:px-16">
+        <section className={`${PUBLIC_PAGE_SHELL} pb-6`}>
           <div className="rounded-[2rem] bg-primary px-8 py-10 text-white md:px-12">
             <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
               <div className="space-y-3">
