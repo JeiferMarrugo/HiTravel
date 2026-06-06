@@ -3,7 +3,7 @@ import Link from "next/link";
 import { BrandLogo } from "@/components/brand-logo";
 import { TopNavBar } from "@/components/top-nav-bar";
 import { PUBLIC_PAGE_SHELL } from "@/lib/public-page-layout";
-import devLogo from "@/public/images/logo_dev.jpeg";
+import devLogo from "@/public/images/logo_dev.png";
 import type { DisplayCurrency } from "@/lib/pricing/visitor-currency";
 import type { SiteContent } from "@/lib/site-content/types";
 
@@ -17,17 +17,26 @@ type SiteChromeProps = {
 
 function DeveloperCreditFooter() {
   return (
-    <div className={`border-t border-neutral-200 bg-white py-4 ${PUBLIC_PAGE_SHELL}`}>
-      <div className="flex items-center justify-center gap-3">
-        <span className="text-[11px] font-semibold uppercase tracking-[0.28em] text-neutral-500">Elaborado por</span>
+    <div className="border-t border-white/10 bg-gradient-to-b from-primary to-[#0a1628]">
+      <div className={`flex items-center justify-center py-5 ${PUBLIC_PAGE_SHELL}`}>
         <a
           href="https://example.com"
           target="_blank"
           rel="noreferrer"
           aria-label="Ir al sitio del desarrollador"
-          className="rounded-md border border-neutral-200 bg-white p-1 shadow-[0_8px_24px_rgba(15,23,42,0.08)] transition-transform duration-200 hover:-translate-y-0.5 hover:shadow-[0_12px_28px_rgba(15,23,42,0.12)]"
+          className="group inline-flex items-center gap-3 rounded-full border border-white/10 bg-white/5 px-4 py-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] backdrop-blur-sm transition-all duration-200 hover:border-secondary-container/40 hover:bg-white/10 hover:shadow-[0_8px_24px_rgba(0,0,0,0.18)]"
         >
-          <Image src={devLogo} alt="Logo desarrollador" width={30} height={30} className="h-7 w-7 rounded-sm object-cover" />
+          <span className="text-[10px] font-semibold uppercase tracking-[0.32em] text-white/55 transition-colors group-hover:text-white/75">
+            Elaborado por
+          </span>
+          <span className="h-4 w-px bg-white/15" aria-hidden />
+          <Image
+            src={devLogo}
+            alt="Logo desarrollador"
+            width={28}
+            height={28}
+            className="h-7 w-7 object-contain brightness-0 invert opacity-90 transition-transform duration-200 group-hover:scale-105 group-hover:opacity-100"
+          />
         </a>
       </div>
     </div>
